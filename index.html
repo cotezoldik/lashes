@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -133,11 +132,12 @@ function App() {
 async function generateImageFromPrompt(promptText, altText, fallbackSize = "400x250", contextName = "General") {
     if (!ai) {
         console.error(`GoogleGenAI not initialized. Cannot generate image for ${contextName}.`);
-        return `https://placehold.co/${fallbackSize}/FF0000/FFFFFF?text=ERROR+SDK`;
+        return `https://placehold.co/${fallbackSize}/FF0000/FFFFFF?text=ERROR_SDK_NO_INIT`;
     }
 
     const fullPrompt = `Fotorrealista, de alta calidad, fondo simple, sin texto. ${promptText}`;
     try {
+        console.log(`[${contextName}] Generating image with prompt: "${fullPrompt.substring(0,100)}..."`);
         const response = await ai.models.generateImages({
             model: 'imagen-3.0-generate-002',
             prompt: fullPrompt,
@@ -145,20 +145,29 @@ async function generateImageFromPrompt(promptText, altText, fallbackSize = "400x
         });
 
         if (response.generatedImages && response.generatedImages.length > 0 && response.generatedImages[0].image && response.generatedImages[0].image.imageBytes) {
+            console.log(`[${contextName}] Image generated successfully.`);
             const base64ImageBytes = response.generatedImages[0].image.imageBytes;
             return `data:image/png;base64,${base64ImageBytes}`;
         } else {
-            console.error(`No image data found in SDK response for ${contextName}. Response:`, response);
-            return `https://placehold.co/${fallbackSize}/FFBF00/FFFFFF?text=IMAGEN+NO+GENERADA`;
+            console.error(`[${contextName}] No image data found in SDK response. Response:`, response);
+            return `https://placehold.co/${fallbackSize}/FFBF00/FFFFFF?text=NO_IMG_DATA_RESP`;
         }
     } catch (error) {
-        console.error(`Error generating image for ${contextName} using SDK:`, error);
-        // Check for specific error types if needed, e.g., API key issues, quota issues
-        let errorMessage = "IMAGEN+NO+CARGADA";
-        if (error.message && error.message.toLowerCase().includes("api key not valid")) {
-            errorMessage = "ERROR+CLAVE+API";
-        } else if (error.message && error.message.toLowerCase().includes("quota")) {
-            errorMessage = "ERROR+CUOTA";
+        console.error(`[${contextName}] Error generating image using SDK:`, error);
+        let errorMessage = "FALLA_API_GENERACION"; // Default error for image generation API failure
+        if (error.message) {
+            const lowerErrorMessage = error.message.toLowerCase();
+            if (lowerErrorMessage.includes("api key not valid")) {
+                errorMessage = "ERROR_CLAVE_API";
+            } else if (lowerErrorMessage.includes("quota")) {
+                errorMessage = "ERROR_CUOTA_API";
+            } else if (lowerErrorMessage.includes("resource has been exhausted")) {
+                errorMessage = "ERROR_RECURSOS_AGOTADOS"; // Often quota related
+            } else if (lowerErrorMessage.includes("service unavailable")) {
+                errorMessage = "ERROR_SERVICIO_NO_DISPONIBLE";
+            } else if (lowerErrorMessage.includes("billing") || lowerErrorMessage.includes("billed users")) {
+                errorMessage = "ERROR_FACTURACION";
+            }
         }
         return `https://placehold.co/${fallbackSize}/FF0000/FFFFFF?text=${errorMessage}`;
     }
@@ -197,7 +206,7 @@ function Home() {
             src={generatedImageUrl}
             alt="[Image of Esteticista Aplicando Pestañas]"
             className="rounded-2xl shadow-xl w-full max-w-lg h-64 object-cover mx-auto transform hover:scale-102 transition-transform duration-300"
-            onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/600x400/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA`; }}
+            onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/600x400/FF0000/FFFFFF?text=IMAGEN_ERROR_ONERROR`; }}
           />
         )}
       </div>
@@ -225,7 +234,7 @@ function LashTypes() {
     const loadImages = async () => {
       setClassicImage(await generateImageFromPrompt("Primer plano extremo fotorrealista de un ojo con extensiones de pestañas clásicas perfectamente aplicadas. Cada extensión individual está meticulosamente adherida a una pestaña natural, creando un efecto de alargamiento natural. Fondo liso y difuminado. Colores realistas.", "Pestañas Clásicas", "300x200", "Pestañas Clásicas"));
       setLoadingClassic(false);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 500)); // Stagger API calls
 
       setVolumeImage(await generateImageFromPrompt("Primer plano extremo fotorrealista de un ojo con extensiones de pestañas de volumen (abanicos 4D-6D) perfectamente aplicadas. Los abanicos densos y mullidos se ven claramente, creando un efecto de alto volumen y dramatismo. Fondo liso y difuminado. Colores realistas.", "Pestañas Volumen", "300x200", "Pestañas Volumen"));
       setLoadingVolume(false);
@@ -270,25 +279,31 @@ function LashTypes() {
 
   const geminiTextCall = async (prompt, setLoading, setResult, errorContext) => {
     if (!ai) {
-      console.error(`GoogleGenAI not initialized. Cannot process request for ${errorContext}.`);
+      console.error(`[${errorContext}] GoogleGenAI not initialized. Cannot process request.`);
       setResult(`Error: El servicio de IA no está disponible (SDK no inicializado).`);
       return;
     }
     setLoading(true);
     setResult('');
     try {
+      console.log(`[${errorContext}] Calling Gemini text API with prompt: "${prompt.substring(0,100)}..."`);
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-preview-04-17',
         contents: prompt,
       });
+      console.log(`[${errorContext}] Gemini text API response received.`);
       setResult(response.text);
     } catch (error) {
-      console.error(`Error ${errorContext} using SDK:`, error);
+      console.error(`[${errorContext}] Error using SDK for text generation:`, error);
       let userErrorMessage = `Error al conectar con la IA. Inténtalo de nuevo.`;
-      if (error.message && error.message.toLowerCase().includes("api key not valid")) {
-          userErrorMessage = "Error: La clave de API no es válida o no está configurada correctamente.";
-      } else if (error.message && error.message.toLowerCase().includes("quota")) {
-          userErrorMessage = "Error: Se ha alcanzado la cuota de la API.";
+      if (error.message) {
+          if (error.message.toLowerCase().includes("api key not valid")) {
+              userErrorMessage = "Error: La clave de API no es válida o no está configurada correctamente.";
+          } else if (error.message.toLowerCase().includes("quota")) {
+              userErrorMessage = "Error: Se ha alcanzado la cuota de la API.";
+          } else if (error.message.toLowerCase().includes("billing") || error.message.toLowerCase().includes("billed users")) {
+              userErrorMessage = "Error: Problema de facturación con la API. Asegúrate de que la facturación esté habilitada.";
+          }
       }
       setResult(userErrorMessage);
     } finally {
@@ -302,7 +317,7 @@ function LashTypes() {
       return;
     }
     const prompt = `Sugiere la mejor combinación de tipos de extensiones de pestañas (Clásicas, Volumen, Híbridas, Mega Volumen, Levantamiento de Pestañas) para una persona con forma de ojo "${eyeShape}" que busca un aspecto "${desiredLook}" para la ocasión "${occasion}". Sé conciso y menciona 2-3 opciones si es posible, explicando brevemente por qué.`;
-    geminiTextCall(prompt, setLoadingSuggestion, setLashSuggestion, "generando sugerencia de pestañas");
+    geminiTextCall(prompt, setLoadingSuggestion, setLashSuggestion, "LashTypes - Sugerencia Combinación");
   };
 
   const handleAnalyzeClient = async () => {
@@ -311,7 +326,7 @@ function LashTypes() {
       return;
     }
     const prompt = `Basado en la siguiente descripción del cliente para extensiones de pestañas, proporciona una sugerencia útil sobre los estilos de pestañas más adecuados (Clásicas, Volumen, Híbridas, Mega Volumen, Levantamiento de Pestañas). Si la información es limitada, haz inferencias razonables o sugiere opciones versátiles, explicando brevemente tu razonamiento y considerando el look deseado y el estilo de vida del cliente. Descripción: "${clientDescription}"`;
-    geminiTextCall(prompt, setLoadingAnalysis, setClientAnalysis, "analizando cliente");
+    geminiTextCall(prompt, setLoadingAnalysis, setClientAnalysis, "LashTypes - Análisis Cliente");
   };
 
   const handleGenerateMarketingText = async () => {
@@ -320,7 +335,7 @@ function LashTypes() {
       return;
     }
     const prompt = `Genera un texto de marketing o una descripción corta para redes sociales (máximo 50 palabras) para el tipo de pestañas "${marketingLashType}". El tono o las palabras clave son: "${marketingKeywords}". Incluye hashtags relevantes.`;
-    geminiTextCall(prompt, setLoadingMarketingText, setGeneratedMarketingText, "generando texto de marketing");
+    geminiTextCall(prompt, setLoadingMarketingText, setGeneratedMarketingText, "LashTypes - Texto Marketing");
   };
 
   return (
@@ -408,7 +423,7 @@ function LashTypes() {
                 </svg>
               </div>
             ) : (
-              <img src={type.image} alt={`[Imagen de ${type.name}]`} className="w-full h-48 object-cover rounded-md mb-4 shadow-md" onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/300x200/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA`; }}/>
+              <img src={type.image} alt={`[Imagen de ${type.name}]`} className="w-full h-48 object-cover rounded-md mb-4 shadow-md" onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/300x200/FF0000/FFFFFF?text=IMAGEN_ERROR_ONERROR`; }}/>
             )}
             <h3 className="text-2xl font-semibold text-purple-600 mb-3">{type.name}</h3>
             <p className="text-gray-700 text-center mb-4 leading-relaxed">{type.description}</p>
@@ -430,6 +445,8 @@ function LearningSection({ moduleIndex, sectionIndex, section, generatedTips, se
   const [loadingAnswer, setLoadingAnswer] = React.useState(false);
   
   const sectionKey = `${moduleIndex}-${sectionIndex}`;
+  const sectionContextName = `Módulo ${moduleIndex + 1} Sección ${sectionIndex + 1} (${section.name})`;
+
 
   React.useEffect(() => {
     const getImagePrompt = (sectionName) => {
@@ -437,21 +454,30 @@ function LearningSection({ moduleIndex, sectionIndex, section, generatedTips, se
         switch (sectionName) {
             case "1.1 Anatomía y Ciclo de la Pestaña": return "Ilustración fotorrealista y muy detallada de un ojo humano, con un enfoque claro en las pestañas naturales...";
             case "1.2 Higiene y Seguridad": return "Imagen fotorrealista de primer plano de manos con guantes estériles de un técnico de pestañas...";
-            // ... (include all specific prompts from original code)
-            default: return `Imagen realista que representa el concepto de "${sectionName}" relacionado con las extensiones de pestañas.`;
+            // Add more specific prompts here from your original design if available
+            // For example:
+            case "1.3 Herramientas y Materiales Esenciales": return "Bodegón fotorrealista bien iluminado mostrando varias herramientas para extensiones de pestañas: pinzas de aislamiento, pinzas de aplicación, adhesivo para pestañas, parches de gel, microcepillos, y una paleta de pestañas. Fondo limpio y profesional.";
+            case "2.1 Preparación del Cliente": return "Vista superior fotorrealista de la zona de los ojos de un cliente, con las pestañas limpias y preparadas para la aplicación de extensiones. Se pueden ver parches de gel debajo de los ojos. Iluminación de estudio.";
+            case "2.2 Técnicas de Aislamiento": return "Macro fotorrealista extrema de una pinza de aislamiento separando cuidadosamente una pestaña natural de las demás, lista para la aplicación de una extensión. Enfoque nítido en la punta de la pinza y la pestaña aislada.";
+            case "2.3 Aplicación 1:1 y Adhesión": return "Primer plano extremo fotorrealista de una extensión de pestaña clásica siendo aplicada a una pestaña natural aislada. Se puede ver una microgota de adhesivo. Enfoque en el punto de unión.";
+            case "3.1 Mapeo de Pestañas": return "Dibujo o ilustración digital clara sobre una foto de un ojo cerrado, mostrando líneas y números que indican diferentes longitudes de pestañas para un diseño de 'ojo de gato' o 'muñeca'. Estilo limpio y educativo.";
+            case "3.2 Curvaturas y Grosores": return "Comparación visual fotorrealista lado a lado de diferentes curvaturas de extensiones de pestañas (J, B, C, D, L) y diferentes grosores (0.07mm, 0.10mm, 0.15mm) sobre un fondo neutro.";
+            case "4.1 Cuidado Post-Aplicación": return "Mujer sonriente con extensiones de pestañas perfectas, cepillando suavemente sus pestañas con un cepillo tipo spoolie. Fondo de un baño limpio y luminoso.";
+            case "4.2 Rellenos y Retirada": return "Vista de primer plano fotorrealista de un técnico de pestañas aplicando cuidadosamente extensiones en un relleno, o utilizando un removedor de gel para quitar extensiones de forma segura. El enfoque debe ser profesional y seguro.";
+            default: return `Imagen realista y de alta calidad que representa el concepto de "${sectionName}" relacionado con las extensiones de pestañas y su aprendizaje.`;
         }
     };
-    generateImageFromPrompt(getImagePrompt(section.name), `Imagen de ${section.name}`, "350x200", `Módulo ${moduleIndex + 1} - Sección ${sectionIndex + 1}`)
+    generateImageFromPrompt(getImagePrompt(section.name), `Imagen de ${section.name}`, "350x200", sectionContextName)
         .then(url => setGeneratedSectionImageUrl(url))
         .finally(() => setIsLoadingSectionImage(false));
   }, [section.name, moduleIndex, sectionIndex]);
 
   const generateLashTip = () => {
-    const prompt = `Dado el siguiente contenido sobre extensiones de pestañas, genera un consejo práctico para un principiante en una frase corta y concisa (máximo 20 palabras) que pueda integrarse directamente en el texto del módulo: "${section.content}"`;
+    const prompt = `Dado el siguiente contenido sobre extensiones de pestañas ("${section.content}"), genera un consejo práctico para un principiante en una frase corta y concisa (máximo 20 palabras) que pueda integrarse directamente en el texto del módulo.`;
     geminiTextCall(prompt, 
       (isLoading) => setLoadingTips(prev => ({ ...prev, [sectionKey]: isLoading })),
       (tip) => setGeneratedTips(prev => ({ ...prev, [sectionKey]: tip })),
-      `generando consejo para ${section.name}`
+      `${sectionContextName} - Consejo IA`
     );
   };
 
@@ -460,8 +486,8 @@ function LearningSection({ moduleIndex, sectionIndex, section, generatedTips, se
       setAnswer("Por favor, escribe una pregunta para obtener una respuesta.");
       return;
     }
-    const prompt = `Basado en el siguiente contenido sobre extensiones de pestañas y técnicas ("${section.content}"), responde a la pregunta: "${question}". Si la pregunta no está directamente relacionada, indica que no tienes información.`;
-    geminiTextCall(prompt, setLoadingAnswer, setAnswer, `respondiendo pregunta sobre ${section.name}`);
+    const prompt = `Basado en el siguiente contenido sobre extensiones de pestañas y técnicas ("${section.content}"), responde a la pregunta del estudiante: "${question}". Si la pregunta no está directamente relacionada, indica amablemente que no tienes información específica sobre ese tema en este contexto.`;
+    geminiTextCall(prompt, setLoadingAnswer, setAnswer, `${sectionContextName} - Pregunta IA`);
   };
 
   return (
@@ -481,7 +507,7 @@ function LearningSection({ moduleIndex, sectionIndex, section, generatedTips, se
       {isLoadingSectionImage ? (
          <div className="mt-4 w-full h-48 flex items-center justify-center bg-gray-100 rounded-md shadow-sm"> <svg className="animate-spin h-8 w-8 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>
       ) : (
-        <img src={generatedSectionImageUrl} alt={`[Imagen de ${section.name}]`} className="mt-4 w-full rounded-md shadow-sm object-cover h-48" onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/350x200/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA`; }}/>
+        <img src={generatedSectionImageUrl} alt={`[Imagen de ${section.name}]`} className="mt-4 w-full rounded-md shadow-sm object-cover h-48" onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/350x200/FF0000/FFFFFF?text=IMAGEN_ERROR_ONERROR`; }}/>
       )}
 
       <button onClick={generateLashTip} className="mt-4 w-full bg-pink-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-pink-600" disabled={loadingTips[sectionKey]}>
@@ -503,22 +529,22 @@ function LearningSection({ moduleIndex, sectionIndex, section, generatedTips, se
 function LearningModules() {
   const modules = [
     { title: "Módulo 1: Fundamentos", description: "Anatomía, higiene, materiales.", image: "https://placehold.co/100x100/93c5fd/ffffff?text=M1", sections: [
-        { name: "1.1 Anatomía y Ciclo de la Pestaña", content: "Explora la estructura de la pestaña natural y su ciclo de crecimiento...", videoLink: "#" },
-        { name: "1.2 Higiene y Seguridad", content: "Protocolos de limpieza, esterilización...", videoLink: "#" },
-        { name: "1.3 Herramientas y Materiales Esenciales", content: "Descubre los diferentes tipos de pinzas, adhesivos...", videoLink: "#" }
+        { name: "1.1 Anatomía y Ciclo de la Pestaña", content: "Explora la estructura de la pestaña natural y su ciclo de crecimiento (anágena, catágena, telógena). Aprende sobre la importancia de la salud de las pestañas naturales para una aplicación exitosa y duradera. Factores que afectan el crecimiento.", videoLink: "#" },
+        { name: "1.2 Higiene y Seguridad", content: "Protocolos de limpieza y desinfección de herramientas y el área de trabajo. Prácticas de higiene personal del técnico. Identificación y manejo de posibles reacciones alérgicas o sensibilidades. Importancia de los parches de prueba.", videoLink: "#" },
+        { name: "1.3 Herramientas y Materiales Esenciales", content: "Descubre los diferentes tipos de pinzas (aislamiento, aplicación), adhesivos (tipos, curado, almacenamiento), extensiones (materiales, curvaturas, grosores, longitudes), primers, selladores, removedores, parches de gel, cintas, y otros accesorios.", videoLink: "#" }
     ]},
     { title: "Módulo 2: Aplicación Clásica", description: "Domina la técnica 1:1.", image: "https://placehold.co/100x100/bfdbfe/ffffff?text=M2", sections: [
-        { name: "2.1 Preparación del Cliente", content: "Cómo limpiar y preparar las pestañas naturales...", videoLink: "#" },
-        { name: "2.2 Técnicas de Aislamiento", content: "La importancia del aislamiento perfecto...", videoLink: "#" },
-        { name: "2.3 Aplicación 1:1 y Adhesión", content: "Guía paso a paso para aplicar una extensión...", videoLink: "#" }
+        { name: "2.1 Preparación del Cliente", content: "Consulta inicial con el cliente, discusión de expectativas y contraindicaciones. Limpieza profunda de las pestañas naturales. Aplicación correcta de parches de gel y cinta para proteger las pestañas inferiores.", videoLink: "#" },
+        { name: "2.2 Técnicas de Aislamiento", content: "La importancia del aislamiento perfecto de una única pestaña natural antes de aplicar la extensión. Diferentes métodos de aislamiento con pinzas. Cómo evitar pegar múltiples pestañas naturales (stickies).", videoLink: "#" },
+        { name: "2.3 Aplicación 1:1 y Adhesión", content: "Guía paso a paso para aplicar una extensión clásica a una pestaña natural. Correcta inmersión de la extensión en el adhesivo. Distancia de aplicación desde el párpado. Asegurar una buena base de unión para máxima retención.", videoLink: "#" }
     ]},
     { title: "Módulo 3: Diseño y Estilismo", description: "Personalizar sets para diferentes ojos.", image: "https://placehold.co/100x100/dbeafe/ffffff?text=M3", sections: [
-        { name: "3.1 Mapeo de Pestañas", content: "Técnicas de mapeo para crear diferentes estilos...", videoLink: "#" },
-        { name: "3.2 Curvaturas y Grosores", content: "Selección de curvaturas (J, B, C, CC, D, L, M)...", videoLink: "#" }
+        { name: "3.1 Mapeo de Pestañas", content: "Técnicas de mapeo para crear diferentes estilos (natural, ojo de gato, muñeca, ardilla, etc.). Cómo adaptar el diseño a la forma del ojo del cliente (almendrados, redondos, caídos, encapuchados) y a la dirección de crecimiento de las pestañas naturales.", videoLink: "#" },
+        { name: "3.2 Curvaturas y Grosores", content: "Selección de curvaturas (J, B, C, CC, D, L, M) y grosores (ej. 0.10, 0.15, 0.18, 0.20 para clásicas) adecuados según el efecto deseado y la salud de las pestañas naturales del cliente. Combinación de diferentes curvaturas y longitudes.", videoLink: "#" }
     ]},
     { title: "Módulo 4: Cuidado y Mantenimiento", description: "Cuidado posterior, rellenos, retiradas.", image: "https://placehold.co/100x100/eff6ff/ffffff?text=M4", sections: [
-        { name: "4.1 Cuidado Post-Aplicación", content: "Consejos para el cliente sobre cómo cuidar sus extensiones...", videoLink: "#" },
-        { name: "4.2 Rellenos y Retirada", content: "Técnicas para realizar rellenos de forma efectiva...", videoLink: "#" }
+        { name: "4.1 Cuidado Post-Aplicación", content: "Consejos para el cliente sobre cómo cuidar sus extensiones para maximizar la retención: limpieza diaria, evitar productos oleosos, no frotar los ojos, cepillado. Productos de cuidado posterior recomendados.", videoLink: "#" },
+        { name: "4.2 Rellenos y Retirada", content: "Técnicas para realizar rellenos de forma efectiva: eliminar extensiones crecidas, limpiar y preparar para nuevas aplicaciones. Proceso seguro para la retirada completa de extensiones utilizando removedores profesionales.", videoLink: "#" }
     ]}
   ];
 
@@ -531,32 +557,27 @@ function LearningModules() {
   // Re-use geminiTextCall from LashTypes or define it here if preferred
   const geminiTextCall = async (prompt, setLoading, setResult, errorContext) => {
     if (!ai) {
-      console.error(`GoogleGenAI not initialized. Cannot process request for ${errorContext}.`);
-      // setResult function handles specific state updates, including error display for its part of UI
+      console.error(`[${errorContext}] GoogleGenAI not initialized. Cannot process request.`);
       if (typeof setResult === 'function') {
         setResult(`Error: El servicio de IA no está disponible.`); 
       }
-      // Ensure loading state is turned off if it was turned on
       if (typeof setLoading === 'function') {
-          // Check if setLoading expects a boolean or a function to update an object
-          // This is a simplified check; more robust would be to know the signature
-          // For LearningSection's setLoadingTips, it expects a function
-          if (setLoading.length === 1 && typeof setLoading(false) === 'object') { 
-            // This is a guess, assuming it's like (isLoading) => setLoadingState(prev => ({...prev, key: isLoading}))
-            // We can't perfectly call it without knowing the key, so we'll just set a general false
-            // This part of the logic might need adjustment based on how setLoadingTips is structured
-            // For now, let's assume it can handle a direct boolean if it's not the specific object updater
-             try { setLoading(false); } catch (e) { console.warn("Could not set loading to false in general geminiTextCall", e); }
-
-          } else {
-             setLoading(false); // For direct setters like setLoadingSuggestion
-          }
+        // Attempt to set loading to false, adapting to object-based setters
+        try {
+            if (setLoading.length === 1 && typeof setLoading(false) === 'object' && Object.keys(setLoading(false)).length > 0 ) {
+                 // This is for setters like setLoadingTips(prev => ({ ...prev, [sectionKey]: isLoading }))
+                 // We don't know the key here, so this specific path is hard to manage perfectly from a generic function
+                 // Best to ensure individual loading states are managed or reset if call fails early
+            } else {
+                 setLoading(false); 
+            }
+        } catch(e) { /* silent */ }
       }
       return;
     }
   
     if (typeof setLoading === 'function') {
-      setLoading(true); 
+      try { setLoading(true); } catch(e) { /* silent */ }
     }
   
     if (typeof setResult === 'function') {
@@ -564,28 +585,34 @@ function LearningModules() {
     }
 
     try {
+      console.log(`[${errorContext}] Calling Gemini text API with prompt: "${prompt.substring(0,100)}..."`);
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash-preview-04-17',
         contents: prompt,
       });
+      console.log(`[${errorContext}] Gemini text API response received.`);
       if (typeof setResult === 'function') {
         setResult(response.text);
       }
     } catch (error) {
-      console.error(`Error ${errorContext} using SDK:`, error);
+      console.error(`[${errorContext}] Error using SDK for text generation:`, error);
       let userErrorMessage = `Error al conectar con la IA. Verifique su conexión o la configuración de la API.`;
-      if (error.message && error.message.toLowerCase().includes("api key not valid")) {
-          userErrorMessage = "Error: La clave de API no es válida o no está configurada correctamente.";
-      } else if (error.message && error.message.toLowerCase().includes("quota")) {
-          userErrorMessage = "Error: Se ha alcanzado la cuota de la API.";
+       if (error.message) {
+          const lowerErrorMessage = error.message.toLowerCase();
+          if (lowerErrorMessage.includes("api key not valid")) {
+              userErrorMessage = "Error: La clave de API no es válida o no está configurada correctamente.";
+          } else if (lowerErrorMessage.includes("quota")) {
+              userErrorMessage = "Error: Se ha alcanzado la cuota de la API.";
+          } else if (lowerErrorMessage.includes("billing") || lowerErrorMessage.includes("billed users")) {
+              userErrorMessage = "Error: Problema de facturación con la API. Asegúrate de que la facturación esté habilitada.";
+          }
       }
       if (typeof setResult === 'function') {
         setResult(userErrorMessage);
       }
     } finally {
       if (typeof setLoading === 'function') {
-        // Similar logic as above for turning off loading
-        try { setLoading(false); } catch (e) { console.warn("Could not set loading to false in finally block", e); }
+         try { setLoading(false); } catch(e) { /* silent */ }
       }
     }
   };
@@ -597,16 +624,16 @@ function LearningModules() {
       <div className="space-y-6">
         {modules.map((module, mIndex) => (
           <div key={mIndex} className="bg-white rounded-xl shadow-lg p-6 border border-purple-200 transform hover:scale-105 transition-transform duration-300">
-            <button className="w-full text-left p-6 flex flex-col sm:flex-row items-center justify-between bg-purple-50 hover:bg-purple-100" onClick={() => toggleModule(mIndex)}>
+            <button className="w-full text-left p-6 flex flex-col sm:flex-row items-center justify-between bg-purple-50 hover:bg-purple-100 rounded-lg" onClick={() => toggleModule(mIndex)}>
               <img src={module.image} alt={module.title} className="w-24 h-24 object-cover rounded-full mb-4 sm:mb-0 sm:mr-6 shadow-md" onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/100x100/CCCCCC/ffffff?text=Error`; }}/>
               <div className="flex-1">
                 <h3 className="text-2xl font-semibold text-purple-700 mb-2">{module.title}</h3>
                 <p className="text-gray-600">{module.description}</p>
               </div>
-              <span className="text-purple-600 text-2xl ml-4">{expandedModule === mIndex ? '▲' : '▼'}</span>
+              <span className="text-purple-600 text-2xl ml-4 transition-transform duration-300 transform" style={{ transform: expandedModule === mIndex ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
             </button>
             {expandedModule === mIndex && (
-              <div className="p-6 bg-purple-50 border-t border-purple-200">
+              <div className="p-6 bg-purple-50 border-t border-purple-200 mt-4 rounded-b-lg">
                 <div className="space-y-6">
                   {module.sections.map((section, sIndex) => (
                     <LearningSection
@@ -636,9 +663,15 @@ function About() {
     <div className="py-8 text-center">
       <h2 className="text-3xl font-bold text-purple-700 mb-6">Acerca de Lash Master Pro</h2>
       <p className="text-lg leading-relaxed mb-4">
-        Lash Master Pro es una plataforma dedicada a proporcionar recursos completos para aspirantes y profesionales de las extensiones de pestañas...
+        Lash Master Pro es una plataforma interactiva y educativa diseñada para empoderar a los artistas de pestañas, desde principiantes hasta expertos. 
+        Nuestra misión es proporcionar conocimientos fundamentales, técnicas avanzadas y herramientas de IA para perfeccionar el arte de las extensiones de pestañas.
+        Creemos en el aprendizaje continuo y en la adaptación a las últimas tendencias de la industria.
       </p>
-      <img src="https://placehold.co/500x300/a78bfa/ffffff?text=Equipo+Lash+Master" alt="[Image of Equipo Lash Master Pro]" className="mt-8 mx-auto rounded-xl shadow-md w-full max-w-lg" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/500x300/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA'; }}/>
+      <p className="text-lg leading-relaxed mb-4">
+        Explora nuestros módulos de aprendizaje detallados, utiliza nuestras herramientas de IA para obtener sugerencias personalizadas, analizar las necesidades de tus clientes,
+        y generar contenido de marketing atractivo. ¡Conviértete en un verdadero Lash Master Pro!
+      </p>
+      <img src="https://placehold.co/500x300/a78bfa/ffffff?text=Equipo+Lash+Master+Pro" alt="[Image of Equipo Lash Master Pro]" className="mt-8 mx-auto rounded-xl shadow-md w-full max-w-lg" onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/500x300/FF0000/FFFFFF?text=IMAGEN_ERROR_ONERROR'; }}/>
     </div>
   );
 }
