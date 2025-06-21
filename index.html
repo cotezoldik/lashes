@@ -1,5 +1,1117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lash Master Pro</title>
+    <!-- React & ReactDOM from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tailwind CSS from CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
+    <script type="text/babel">
+        // ######################################################################################################################
+        // ################################################# ATENCIÓN CRÍTICA: CLAVE DE API #######################################
+        // ######################################################################################################################
+        // PARA QUE CUALQUIER FUNCIÓN DE INTELIGENCIA ARTIFICIAL (IA) Y LA GENERACIÓN DE IMÁGENES FUNCIONEN,
+        // DEBES INSERTAR TU CLAVE DE API REAL DE GOOGLE AI STUDIO EN LOS 5 LUGARES ESPECÍFICOS INDICADOS ABAJO.
+        // ACTUALMENTE, LA CLAVE ESTÁ ESTABLECIDA COMO UN MARCADOR DE POSICIÓN ("AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY").
+        // SI NO LA REEMPLAZAS, LA IA SIEMPRE MOSTRARÁ EL ERROR "Clave de API no configurada" O SIMPLEMENTE NO FUNCIONARÁ.
+        // ######################################################################################################################
+        // ADVERTENCIA DE SEGURIDAD: NO COMPARTAS ESTA CLAVE PÚBLICAMENTE EN APLICACIONES DE PRODUCCIÓN REALES.
+        // ######################################################################################################################
+
+
+        // ADVERTENCIA IMPORTANTE:
+        // Las llamadas a la API de Gemini (para sugerencias de pestañas, análisis de cliente, preguntas a la IA)
+        // Y LA GENERACIÓN DINÁMICA DE IMÁGENES
+        // SOLO FUNCIONARÁN CORRECTAMENTE cuando la aplicación se ejecute desde un SERVIDOR WEB (como Netlify o un entorno de desarrollo local).
+        // Si abres este archivo directamente con "file://", las funciones de IA no trabajarán debido a las políticas de seguridad (CORS).
+        // Las imágenes mostrarán spinners y luego mensajes de error si la API no puede ser alcanzada.
+
+
+        // Main App Component
+        function App() {
+          const [currentPage, setCurrentPage] = React.useState('home'); // State to manage current page view
+
+          // Tailwind CSS classes for consistent styling - UPDATED FOR MODERN DESIGN
+          const navButtonClass = "px-6 py-3 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-md";
+          const activeNavButtonClass = "bg-purple-700 text-white shadow-lg";
+          const inactiveNavButtonClass = "bg-purple-100 text-purple-800 hover:bg-purple-200";
+
+          // Render content based on the current page
+          const renderPage = () => {
+            switch (currentPage) {
+              case 'lashTypes':
+                return <LashTypes />;
+              case 'learningModules':
+                return <LearningModules />;
+              case 'about':
+                return <About />;
+              default:
+                return <Home />;
+            }
+          };
+
+          return (
+            <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 font-inter text-gray-800 flex flex-col">
+              {/* Header Section - IMPROVED DESIGN */}
+              <header className="bg-white shadow-xl p-4 md:p-6 flex flex-col sm:flex-row items-center justify-between sticky top-0 z-10 rounded-b-3xl">
+                <h1 className="text-4xl font-extrabold text-purple-800 mb-4 sm:mb-0 md:text-5xl">
+                  Lash Master Pro
+                </h1>
+                {/* Navigation - IMPROVED BUTTON STYLE */}
+                <nav className="flex flex-wrap justify-center gap-4">
+                  <button
+                    onClick={() => setCurrentPage('home')}
+                    className={`${navButtonClass} ${currentPage === 'home' ? activeNavButtonClass : inactiveNavButtonClass}`}
+                  >
+                    Inicio
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage('lashTypes')}
+                    className={`${navButtonClass} ${currentPage === 'lashTypes' ? activeNavButtonClass : inactiveNavButtonClass}`}
+                  >
+                    Tipos de Pestañas
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage('learningModules')}
+                    className={`${navButtonClass} ${currentPage === 'learningModules' ? activeNavButtonClass : inactiveNavButtonClass}`}
+                  >
+                    Módulos de Aprendizaje
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage('about')}
+                    className={`${navButtonClass} ${currentPage === 'about' ? activeNavButtonClass : inactiveNavButtonClass}`}
+                  >
+                    Acerca de
+                  </button>
+                </nav>
+              </header>
+
+              {/* Main Content Area - IMPROVED SPACING AND SHADOW */}
+              <main className="flex-grow p-6 sm:p-8 md:p-10">
+                <div className="max-w-5xl mx-auto bg-white p-6 sm:p-8 md:p-10 rounded-3xl shadow-2xl border border-purple-200">
+                  {renderPage()}
+                </div>
+              </main>
+
+              {/* Footer Section - IMPROVED DESIGN */}
+              <footer className="bg-purple-900 text-white p-4 md:p-6 text-center mt-12 rounded-t-3xl shadow-inner">
+                <p className="text-lg">&copy; 2024 Lash Master Pro. Todos los derechos reservados.</p>
+              </footer>
+            </div>
+          );
+        }
+
+        // --- Helper function for Image Generation ---
+        async function generateImageFromPrompt(promptText, altText, fallbackSize = "400x250", contextName = "General") {
+            // ##########################################################################################
+            // ########### LUGAR 1 DE 5 PARA INSERTAR TU CLAVE DE API DE GOOGLE AI STUDIO #############
+            // ##########################################################################################
+            const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- ¡REEMPLAZA ESTO CON TU CLAVE REAL! EJ: "AIzaSyB-abcdef1234567890"
+            // ##########################################################################################
+
+            if (apiKey === "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY" || apiKey === "") {
+                console.error(`ERROR: La clave de API de Gemini no está configurada para la generación de imágenes en ${contextName}.`);
+                return `https://placehold.co/${fallbackSize}/FF0000/FFFFFF?text=ERROR+CLAVE+API`;
+            }
+
+            const prompt = `Fotorrealista, de alta calidad, fondo simple, sin texto. ${promptText}`;
+            const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1 } };
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.text();
+                    throw new Error(`API Error ${response.status} for ${contextName}: ${response.statusText} - ${errorDetails}`);
+                }
+
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const errorText = await response.text();
+                    throw new Error(`Unexpected content type for ${contextName}: ${contentType || 'none'} - ${errorText}`);
+                }
+
+                const result = await response.json();
+
+                if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                    return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                } else {
+                    console.error(`No predictions or data found for ${contextName}. Result:`, result);
+                    return `https://placehold.co/${fallbackSize}/FF0000/FFFFFF?text=IMAGEN+NO+GENERADA`;
+                }
+            } catch (error) {
+                console.error(`Error fetching image for ${contextName}:`, error);
+                return `https://placehold.co/${fallbackSize}/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA`;
+            }
+        }
+
+
+        // Home Page Component
+        function Home() {
+          const [generatedImageUrl, setGeneratedImageUrl] = React.useState('');
+          const [isLoadingImage, setIsLoadingImage] = React.useState(true);
+
+          React.useEffect(() => {
+            const prompt = "Esteticista profesional sonriente y alegre, con guantes, aplicando meticulosamente extensiones de pestañas a una clienta joven también sonriente y satisfecha. Ambas miran a la cámara con expresiones de felicidad. La escena es un salón de belleza moderno y limpio, con iluminación suave y cálida. Enfoque nítido en las pestañas y las manos del profesional. Colores vibrantes y realistas.";
+            generateImageFromPrompt(prompt, "Bienvenida al Mundo de las Pestañas", "600x400", "Home Page")
+                .then(url => setGeneratedImageUrl(url))
+                .finally(() => setIsLoadingImage(false));
+          }, []);
+
+          return (
+            <div className="text-center py-8">
+              <h2 className="text-4xl font-bold text-purple-700 mb-6">¡Bienvenida a Lash Master Pro!</h2>
+              <p className="text-lg leading-relaxed mb-6">
+                Tu guía completa para dominar el arte de las extensiones de pestañas. Explora nuestros módulos de aprendizaje,
+                descubre los diferentes tipos de pestañas y mejora tus habilidades.
+              </p>
+              {/* Centered Dynamic Image with improved styling */}
+              <div className="flex justify-center mb-6">
+                {isLoadingImage ? (
+                  <div className="w-full max-w-lg h-64 flex items-center justify-center bg-gray-200 rounded-2xl shadow-lg">
+                    <svg className="animate-spin h-10 w-10 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                ) : (
+                  <img
+                    src={generatedImageUrl}
+                    alt="[Image of Esteticista Aplicando Pestañas]"
+                    className="rounded-2xl shadow-xl w-full max-w-lg h-64 object-cover mx-auto transform hover:scale-102 transition-transform duration-300"
+                    onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/400x250/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA`; }}
+                  />
+                )}
+              </div>
+              <p className="text-md mt-6 text-gray-600">
+                ¡Comienza tu viaje hoy mismo! Navega por las secciones de arriba para empezar.
+              </p>
+            </div>
+          );
+        }
+
+        // Lash Types Page Component
+        function LashTypes() {
+          // States for each lash type image and its loading status
+          const [classicImage, setClassicImage] = React.useState('');
+          const [loadingClassic, setLoadingClassic] = React.useState(true);
+          const [volumeImage, setVolumeImage] = React.useState('');
+          const [loadingVolume, setLoadingVolume] = React.useState(true);
+          const [hybridImage, setHybridImage] = React.useState('');
+          const [loadingHybrid, setLoadingHybrid] = React.useState(true);
+          const [megaVolumeImage, setMegaVolumeImage] = React.useState('');
+          const [loadingMegaVolume, setLoadingMegaVolume] = React.useState(true);
+          const [lashLiftImage, setLashLiftImage] = React.useState('');
+          const [loadingLashLift, setLoadingLashLift] = React.useState(true);
+
+          React.useEffect(() => {
+            const loadImages = async () => {
+              // Generate images with a delay to avoid rate limiting issues
+              setClassicImage(await generateImageFromPrompt("Primer plano extremo fotorrealista de un ojo con extensiones de pestañas clásicas perfectamente aplicadas. Cada extensión individual está meticulosamente adherida a una pestaña natural, creando un efecto de alargamiento natural. Fondo liso y difuminado. Colores realistas.", "Pestañas Clásicas", "300x200", "Pestañas Clásicas"));
+              setLoadingClassic(false);
+              await new Promise(resolve => setTimeout(resolve, 500)); // Short delay
+
+              setVolumeImage(await generateImageFromPrompt("Primer plano extremo fotorrealista de un ojo con extensiones de pestañas de volumen (abanicos 4D-6D) perfectamente aplicadas. Los abanicos densos y mullidos se ven claramente, creando un efecto de alto volumen y dramatismo. Fondo liso y difuminado. Colores realistas.", "Pestañas Volumen", "300x200", "Pestañas Volumen"));
+              setLoadingVolume(false);
+              await new Promise(resolve => setTimeout(resolve, 500));
+
+              setHybridImage(await generateImageFromPrompt("Primer plano extremo fotorrealista de un ojo con extensiones de pestañas híbridas, mostrando una mezcla equilibrada de extensiones individuales (clásicas) y abanicos de volumen. La textura y la densidad son claramente visibles. Fondo liso y difuminado. Colores realistas.", "Pestañas Híbridas", "300x200", "Pestañas Híbridas"));
+              setLoadingHybrid(false);
+              await new Promise(resolve => setTimeout(resolve, 500));
+
+              setMegaVolumeImage(await generateImageFromPrompt("Primer plano extremo fotorrealista de un ojo con extensiones de pestañas de mega volumen (abanicos 10D-15D) perfectamente aplicadas. El efecto es de máxima densidad y un look glamuroso y oscuro. Fondo liso y difuminado. Colores realistas.", "Pestañas Mega Volumen", "300x200", "Pestañas Mega Volumen"));
+              setLoadingMegaVolume(false);
+              await new Promise(resolve => setTimeout(resolve, 500));
+
+              setLashLiftImage(await generateImageFromPrompt("Primer plano extremo fotorrealista de un ojo con pestañas naturales después de un levantamiento (lash lift). Las pestañas están perfectamente curvadas hacia arriba desde la raíz, dando un aspecto de ojo abierto y alargado natural. Sin extensiones. Fondo liso y difuminado. Colores realistas.", "Levantamiento Pestañas", "300x200", "Levantamiento de Pestañas"));
+              setLoadingLashLift(false);
+            };
+            loadImages();
+          }, []);
+
+          const lashTypes = [
+            {
+              name: "Pestañas Clásicas",
+              description: "Las extensiones clásicas consisten en aplicar una extensión individual a una pestaña natural. Proporcionan un aspecto más natural, añadiendo longitud y un poco de volumen.",
+              image: classicImage,
+              isLoading: loadingClassic,
+              details: [
+                "Relación 1:1 (una extensión por pestaña natural)",
+                "Ideal para un look natural o para quienes tienen muchas pestañas naturales",
+                "Duración: 2-3 semanas con relleno"
+              ]
+            },
+            {
+              name: "Pestañas de Volumen (2D-6D)",
+              description: "Las extensiones de volumen, también conocidas como pestañas rusas de volumen, implican la creación de 'abanicos' de múltiples extensiones ligeras (2-6D) que se aplican a una sola pestaña natural. Ofrecen un aspecto más denso y dramático.",
+              image: volumeImage,
+              isLoading: loadingVolume,
+              details: [
+                "Abanicos prefabricados o hechos a mano (2D-6D)",
+                "Crean un aspecto más lleno y dramático",
+                "Duración: 3-4 semanas con relleno"
+              ]
+            },
+            {
+              name: "Pestañas Híbridas",
+              description: "Las pestañas híbridas son una combinación de extensiones clásicas y de volumen. Ofrecen una textura más completa que las clásicas, pero menos dramática que el volumen completo, logrando un look versátil.",
+              image: hybridImage,
+              isLoading: loadingHybrid,
+              details: [
+                "Mélange de techniques classiques y de volume",
+                "Aspecto texturizado y completo",
+                "Duración: 3-4 semanas con relleno"
+              ]
+            },
+            {
+              name: "Pestañas Mega Volumen (7D+)",
+              description: "El mega volumen lleva las pestañas de volumen al siguiente nivel, utilizando abanicos aún más grandes y ligeros (7D o más) para crear un efecto extremadamente denso y glamuroso.",
+              image: megaVolumeImage,
+              isLoading: loadingMegaVolume,
+              details: [
+                "Abanicos muy grandes (7D o más)",
+                "Para un look ultra-dramático y denso",
+                "Duración: 4-5 semanas con relleno"
+              ]
+            },
+            {
+              name: "Levantamiento de Pestañas (Lash Lift)",
+              description: "No es una extensión, sino un tratamiento que riza y levanta las pestañas naturales desde la raíz, haciéndolas parecer más largas y voluminosas. A menudo se combina con un tinte de pestañas.",
+              image: lashLiftImage,
+              isLoading: loadingLashLift,
+              details: [
+                "Tratamiento semipermanente para pestañas naturales",
+                "Crea un efecto de rizado y levantamiento",
+                "Duración: 6-8 semanas"
+              ]
+            }
+          ];
+
+          const [eyeShape, setEyeShape] = React.useState('');
+          const [desiredLook, setDesiredLook] = React.useState('');
+          const [occasion, setOccasion] = React.useState(''); // New state for occasion
+          const [lashSuggestion, setLashSuggestion] = React.useState('');
+          const [loadingSuggestion, setLoadingSuggestion] = React.useState(false);
+
+          const [clientDescription, setClientDescription] = React.useState(''); // New state for client description
+          const [clientAnalysis, setClientAnalysis] = React.useState(''); // New state for AI client analysis
+          const [loadingAnalysis, setLoadingAnalysis] = React.useState(false); // New state for loading analysis
+
+          // New states for Marketing Content Generator
+          const [marketingLashType, setMarketingLashType] = React.useState('');
+          const [marketingKeywords, setMarketingKeywords] = React.useState('');
+          const [generatedMarketingText, setGeneratedMarketingText] = React.useState('');
+          const [loadingMarketingText, setLoadingMarketingText] = React.useState(false);
+
+
+          const handleSuggestLashCombination = async () => {
+            if (!eyeShape || !desiredLook || !occasion) { // Added occasion to validation
+              setLashSuggestion('Por favor, selecciona la forma de ojo, el aspecto deseado y la ocasión.');
+              return;
+            }
+
+            setLoadingSuggestion(true);
+            setLashSuggestion(''); // Clear previous suggestion
+
+            // Prompt updated to include occasion
+            const prompt = `Sugiere la mejor combinación de tipos de extensiones de pestañas (Clásicas, Volumen, Híbridas, Mega Volumen, Levantamiento de Pestañas) para una persona con forma de ojo "${eyeShape}" que busca un aspecto "${desiredLook}" para la ocasión "${occasion}". Sé conciso y menciona 2-3 opciones si es posible, explicando brevemente por qué.`;
+
+            try {
+              let chatHistory = [];
+              chatHistory.push({ role: 'user', parts: [{ text: prompt }] });
+              const payload = { contents: chatHistory };
+              // ##########################################################################################
+              // ########### LUGAR 2 DE 5 PARA INSERTAR TU CLAVE DE API DE GOOGLE AI STUDIO #############
+              // ##########################################################################################
+              const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- ¡DEBES REEMPLAZAR "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY" CON TU CLAVE REAL DE GOOGLE AI STUDIO!
+              // ##########################################################################################
+              if (apiKey === "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY" || apiKey === "") {
+                  setLashSuggestion('ERROR: Clave de API no configurada. Por favor, inserta tu clave de API de Gemini.');
+                  console.error('ERROR: Clave de API no configurada para Sugerencia de Combinación.');
+                  setLoadingSuggestion(false);
+                  return;
+              }
+              const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+              const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              const result = await response.json();
+
+              if (result.candidates && result.candidates.length > 0 &&
+                  result.candidates[0].content && result.candidates[0].content.parts &&
+                  result.candidates[0].content.parts.length > 0) {
+                const text = result.candidates[0].content.parts[0].text;
+                setLashSuggestion(text);
+              } else {
+                setLashSuggestion('No se pudo generar la sugerencia. Inténtalo de nuevo.');
+              }
+            } catch (error) {
+              console.error('Error generating lash combination:', error);
+              setLashSuggestion('Error al conectar con la IA. Verifica tu clave de API y cuotas.');
+            } finally {
+              setLoadingSuggestion(false);
+            }
+          };
+
+          // New function to handle client description analysis
+          const handleAnalyzeClient = async () => {
+            if (!clientDescription.trim()) {
+              setClientAnalysis('Por favor, introduce una descripción del cliente para el análisis.');
+              return;
+            }
+
+            setLoadingAnalysis(true);
+            setClientAnalysis(''); // Clear previous analysis
+
+            // PROMPT MEJORADO PARA MAYOR FLEXIBILIDAD
+            const prompt = `Basado en la siguiente descripción del cliente para extensiones de pestañas, proporciona una sugerencia útil sobre los estilos de pestañas más adecuados (Clásicas, Volumen, Híbridas, Mega Volumen, Levantamiento de Pestañas). Si la información es limitada, haz inferencias razonables o sugiere opciones versátiles, explicando brevemente tu razonamiento y considerando el look deseado y el estilo de vida del cliente. Descripción: "${clientDescription}"`;
+
+            try {
+              let chatHistory = [];
+              chatHistory.push({ role: 'user', parts: [{ text: prompt }] });
+              const payload = { contents: chatHistory };
+              // ##########################################################################################
+              // ########### LUGAR 3 DE 5 PARA INSERTAR TU CLAVE DE API DE GOOGLE AI STUDIO #############
+              // ##########################################################################################
+              const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- ¡DEBES REEMPLAZAR "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY" CON TU CLAVE REAL DE GOOGLE AI STUDIO!
+              // ##########################################################################################
+              if (apiKey === "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY" || apiKey === "") {
+                  setClientAnalysis('ERROR: Clave de API no configurada. Por favor, inserta tu clave de API de Gemini.');
+                  console.error('ERROR: Clave de API no configurada para Análisis de Cliente.');
+                  setLoadingAnalysis(false);
+                  return;
+              }
+              const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+              const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              const result = await response.json();
+
+              if (result.candidates && result.candidates.length > 0 &&
+                  result.candidates[0].content && result.candidates[0].content.parts &&
+                  result.candidates[0].content.parts.length > 0) {
+                const text = result.candidates[0].content.parts[0].text;
+                setClientAnalysis(text);
+              } else {
+                setClientAnalysis('No se pudo analizar la descripción del cliente. Inténtalo de nuevo.');
+              }
+            } catch (error) {
+              console.error('Error analyzing client description:', error);
+              setClientAnalysis('Error al conectar con la IA. Verifica tu clave de API y cuotas.');
+            } finally {
+              setLoadingAnalysis(false);
+            }
+          };
+
+          // New function to handle marketing text generation
+          const handleGenerateMarketingText = async () => {
+            if (!marketingLashType || !marketingKeywords.trim()) {
+              setGeneratedMarketingText('Por favor, selecciona un tipo de pestaña y describe el tono/palabras clave.');
+              return;
+            }
+
+            setLoadingMarketingText(true);
+            setGeneratedMarketingText('');
+
+            const prompt = `Genera un texto de marketing o una descripción corta para redes sociales (máximo 50 palabras) para el tipo de pestañas "${marketingLashType}". El tono o las palabras clave son: "${marketingKeywords}". Incluye hashtags relevantes.`;
+
+            try {
+              let chatHistory = [];
+              chatHistory.push({ role: 'user', parts: [{ text: prompt }] });
+              const payload = { contents: chatHistory };
+              // ##########################################################################################
+              // ########### LUGAR 4 DE 5 PARA INSERTAR TU CLAVE DE API DE GOOGLE AI STUDIO #############
+              // ##########################################################################################
+              const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- ¡DEBES REEMPLAZAR "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY" CON TU CLAVE REAL DE GOOGLE AI STUDIO!
+              // ##########################################################################################
+              if (apiKey === "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY" || apiKey === "") {
+                  setGeneratedMarketingText('ERROR: Clave de API no configurada. Por favor, inserta tu clave de API de Gemini.');
+                  console.error('ERROR: Clave de API no configurada para Generador de Marketing.');
+                  setLoadingMarketingText(false);
+                  return;
+              }
+              const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+              const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              const result = await response.json();
+
+              if (result.candidates && result.candidates.length > 0 &&
+                  result.candidates[0].content && result.candidates[0].content.parts &&
+                  result.candidates[0].content.parts.length > 0) {
+                const text = result.candidates[0].content.parts[0].text;
+                setGeneratedMarketingText(text);
+              } else {
+                setGeneratedMarketingText('No se pudo generar el texto de marketing. Inténtalo de nuevo.');
+              }
+            } catch (error) {
+              console.error('Error generating marketing text:', error);
+              setGeneratedMarketingText('Error al conectar con la IA. Verifica tu clave de API y cuotas.');
+            } finally {
+              setLoadingMarketingText(false);
+            }
+          };
+
+
+          return (
+            <div className="py-8">
+              <h2 className="text-3xl font-bold text-purple-700 mb-8 text-center">Tipos de Pestañas</h2>
+              
+              {/* Lash Combination Suggester */}
+              <div className="bg-purple-50 rounded-xl shadow-lg p-6 mb-8 border border-purple-200">
+                <h3 className="text-2xl font-semibold text-purple-700 mb-4 text-center">
+                  Sugerencia Personalizada de Pestañas ✨
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4"> {/* Adjusted grid for 3 columns */}
+                  <div>
+                    <label htmlFor="eyeShape" className="block text-gray-700 text-sm font-bold mb-2">
+                      Forma de Ojo:
+                    </label>
+                    <select
+                      id="eyeShape"
+                      value={eyeShape}
+                      onChange={(e) => setEyeShape(e.target.value)}
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-purple-500 transition-colors duration-200"
+                    >
+                      <option value="">Selecciona una forma</option>
+                      <option value="Almendrada">Almendrada</option>
+                      <option value="Redonda">Redonda</option>
+                      <option value="Monólido">Monólido</option>
+                      <option value="Encappuchados">Encappuchados</option>
+                      <option value="Caídos">Caídos</option>
+                      <option value="Grandes">Grandes</option>
+                      <option value="Pequeños">Pequeños</option>
+                      <option value="Juntos">Juntos</option>
+                      <option value="Separados">Separados</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="desiredLook" className="block text-gray-700 text-sm font-bold mb-2">
+                      Aspecto Deseado:
+                    </label>
+                    <select
+                      id="desiredLook"
+                      value={desiredLook}
+                      onChange={(e) => setDesiredLook(e.target.value)}
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-purple-500 transition-colors duration-200"
+                    >
+                      <option value="">Selecciona un aspecto</option>
+                      <option value="Natural Suave">Natural Suave</option>
+                      <option value="Volumen Sutil">Volumen Sutil</option>
+                      <option value="Dramático y Extenso">Dramático y Extenso</option>
+                      <option value="Efecto Mojado">Efecto Mojado</option>
+                      <option value="Fox Eye (Ojo de Zorro)">Fox Eye (Ojo de Zorro)</option>
+                      <option value="Muñeca Abierta">Muñeca Abierta</option>
+                      <option value="Kim K (Picotazos)">Kim K (Picotazos)</option>
+                      <option value="Clásico Elegante">Clásico Elegante</option>
+                      <option value="Volumen Ruso Completo">Volumen Ruso Completo</option>
+                    </select>
+                  </div>
+                  {/* Occasion Select */}
+                  <div>
+                    <label htmlFor="occasion" className="block text-gray-700 text-sm font-bold mb-2">
+                      Ocasión:
+                    </label>
+                    <select
+                      id="occasion"
+                      value={occasion}
+                      onChange={(e) => setOccasion(e.target.value)}
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-purple-500 transition-colors duration-200"
+                    >
+                      <option value="">Selecciona una ocasión</option>
+                      <option value="Diario">Diario</option>
+                      <option value="Fiesta">Fiesta</option>
+                      <option value="Boda">Boda</option>
+                      <option value="Evento Formal">Evento Formal</option>
+                      <option value="Sesión de Fotos">Sesión de Fotos</option>
+                      <option value="Vacaciones">Vacaciones</option>
+                    </select>
+                  </div>
+                </div>
+                <button
+                  onClick={handleSuggestLashCombination}
+                  className="w-full bg-indigo-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-600 transition-colors duration-200 shadow-md flex items-center justify-center"
+                  disabled={loadingSuggestion}
+                >
+                  {loadingSuggestion ? (
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    'Sugerir Combinación de Pestañas ✨'
+                  )}
+                </button>
+                {lashSuggestion && (
+                  <div className="mt-4 p-4 bg-white rounded-lg border border-indigo-300 text-indigo-800 text-sm italic">
+                    <strong>Sugerencia de la IA:</strong> {lashSuggestion}
+                  </div>
+                )}
+              </div>
+
+              {/* Client Analysis Section */}
+              <div className="bg-purple-50 rounded-xl shadow-lg p-6 mb-8 border border-purple-200">
+                <h3 className="text-2xl font-semibold text-purple-700 mb-4 text-center">
+                  Análisis de Cliente con IA ✨
+                </h3>
+                <p className="text-gray-700 mb-4 text-center">
+                  Describe a tu cliente (ej. forma de ojo, preferencias, estilo de vida) y la IA te sugerirá el estilo de pestañas ideal.
+                </p>
+                <textarea
+                  className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 mb-4 resize-y"
+                  rows="4"
+                  placeholder="Ej: Describe a tu cliente, incluso si la información es general (ej. 'Quiere algo discreto para trabajar' o 'Necesita un look dramático para una fiesta'). La IA intentará sugerir el estilo ideal."
+                  value={clientDescription}
+                  onChange={(e) => setClientDescription(e.target.value)}
+                ></textarea>
+                <button
+                  onClick={handleAnalyzeClient}
+                  className="w-full bg-green-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-600 transition-colors duration-200 shadow-md flex items-center justify-center"
+                  disabled={loadingAnalysis}
+                >
+                  {loadingAnalysis ? (
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    'Analizar Cliente con IA ✨'
+                  )}
+                </button>
+                {clientAnalysis && (
+                  <div className="mt-4 p-4 bg-white rounded-lg border border-green-300 text-green-800 text-sm italic">
+                    <strong>Análisis de la IA:</strong> {clientAnalysis}
+                  </div>
+                )}
+              </div>
+
+              {/* NEW: Marketing Content Generator Section */}
+              <div className="bg-purple-50 rounded-xl shadow-lg p-6 mb-8 border border-purple-200">
+                <h3 className="text-2xl font-semibold text-purple-700 mb-4 text-center">
+                  Generador de Contenido de Marketing ✨
+                </h3>
+                <p className="text-gray-700 mb-4 text-center">
+                  Crea textos atractivos para redes sociales o promociones.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label htmlFor="marketingLashType" className="block text-gray-700 text-sm font-bold mb-2">
+                      Tipo de Pestaña:
+                    </label>
+                    <select
+                      id="marketingLashType"
+                      value={marketingLashType}
+                      onChange={(e) => setMarketingLashType(e.target.value)}
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-purple-500 transition-colors duration-200"
+                    >
+                      <option value="">Selecciona un tipo</option>
+                      <option value="Pestañas Clásicas">Pestañas Clásicas</option>
+                      <option value="Pestañas de Volumen (2D-6D)">Pestañas de Volumen</option>
+                      <option value="Pestañas Híbridas">Pestañas Híbridas</option>
+                      <option value="Pestañas Mega Volumen (7D+)">Pestañas Mega Volumen</option>
+                      <option value="Levantamiento de Pestañas (Lash Lift)">Levantamiento de Pestañas</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="marketingKeywords" className="block text-gray-700 text-sm font-bold mb-2">
+                      Tono / Palabras Clave:
+                    </label>
+                    <input
+                      type="text"
+                      id="marketingKeywords"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-purple-500 transition-colors duration-200"
+                      placeholder="Ej: elegante, natural, impactante, promocional"
+                      value={marketingKeywords}
+                      onChange={(e) => setMarketingKeywords(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={handleGenerateMarketingText}
+                  className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-md flex items-center justify-center"
+                  disabled={loadingMarketingText}
+                >
+                  {loadingMarketingText ? (
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    'Generar Texto de Marketing ✨'
+                  )}
+                </button>
+                {generatedMarketingText && (
+                  <div className="mt-4 p-4 bg-white rounded-lg border border-blue-300 text-blue-800 text-sm italic">
+                    <strong>Texto de Marketing Generado:</strong> {generatedMarketingText}
+                  </div>
+                )}
+              </div>
+              {/* END Marketing Content Generator Section */}
+
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {lashTypes.map((type, index) => (
+                  <div key={index} className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center border border-purple-200 transform hover:scale-105 transition-transform duration-300">
+                    {type.isLoading ? (
+                      <div className="w-full h-48 flex items-center justify-center bg-gray-100 rounded-md mb-4 shadow-sm">
+                        <svg className="animate-spin h-8 w-8 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0  018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </div>
+                    ) : (
+                      <img
+                        src={type.image}
+                        alt={`[Imagen de ${type.name}]`}
+                        className="w-full h-48 object-cover rounded-md mb-4 shadow-md"
+                        onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/300x200/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA`; }}
+                      />
+                    )}
+                    <h3 className="text-2xl font-semibold text-purple-600 mb-3">{type.name}</h3>
+                    <p className="text-gray-700 text-center mb-4 leading-relaxed">{type.description}</p>
+                    <ul className="text-gray-600 text-left w-full list-disc list-inside">
+                      {type.details.map((detail, dIndex) => (
+                        <li key={dIndex}>{detail}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        // LearningSection Component (Now uses dynamic AI images)
+        function LearningSection({ moduleIndex, sectionIndex, section, generatedTips, setLoadingTips, setGeneratedTips, loadingTips }) {
+          const [generatedSectionImageUrl, setGeneratedSectionImageUrl] = React.useState('');
+          const [isLoadingSectionImage, setIsLoadingSectionImage] = React.useState(true);
+
+          React.useEffect(() => {
+            // Define specific prompts for each section's image
+            const getImagePrompt = (sectionName) => {
+              switch (sectionName) {
+                case "1.1 Anatomía y Ciclo de la Pestaña":
+                  return "Ilustración fotorrealista y muy detallada de un ojo humano, con un enfoque claro en las pestañas naturales. Muestra de forma didáctica el folículo piloso y las fases del ciclo de crecimiento de la pestaña (anágena, catágena, telógena). Fondo blanco o muy limpio. Estilo científico pero accesible. Sin texto.";
+                case "1.2 Higiene y Seguridad":
+                  return "Imagen fotorrealista de primer plano de manos con guantes estériles de un técnico de pestañas, sujetando herramientas de extensión de pestañas desinfectadas y organizadas en una bandeja metálica limpia. El entorno es un salón de belleza inmaculado, con luz brillante. Enfoque en la limpieza y el profesionalismo. Sin texto.";
+                case "1.3 Herramientas y Materiales Esenciales":
+                  return "Disposición fotorrealista y artística de todas las herramientas y materiales esenciales para extensiones de pestañas. Incluye diferentes tipos de pinzas (recta, curva, de aislamiento), una botella de adhesivo para pestañas, parches de hidrogel, un cepillo de microfibra, un soplador de aire, una caja de extensiones de pestañas de varios grosores y curvaturas, y una cinta médica. Todo dispuesto ordenadamente sobre una superficie de mármol blanco o madera clara. Iluminación suave y uniforme. Sin texto.";
+                case "2.1 Preparación del Cliente":
+                  return "Primer plano fotorrealista y delicado de las manos de un profesional, usando un limpiador espumoso y un cepillo suave para limpiar las pestañas de una clienta. La clienta está recostada con los ojos cerrados, y se ven parches de hidrogel protegiendo las pestañas inferiores. Ambiente de salón, iluminación suave. Sin texto.";
+                case "2.2 Técnicas de Aislamiento":
+                  return "Primer plano extremo y fotorrealista de la técnica de aislamiento de pestañas. Una pestaña natural individual es perfectamente aislada usando dos pinzas finas y puntiagudas. Las otras pestañas naturales están claramente apartadas. Fondo desenfocado. Enfoque nítido en el punto de aislamiento. Sin texto.";
+                case "2.3 Aplicación 1:1 y Adhesión":
+                  return "Primer plano extremo y fotorrealista de una extensión de pestaña siendo aplicada con precisión a una pestaña natural individual, mostrando el punto exacto de adhesión y unas pinzas de extensión de pestañas. Fondo difuminado. Sin texto.";
+                case "3.1 Mapeo de Pestañas":
+                  return "Ilustración fotorrealista y clara de un ojo con un 'mapa de pestañas' sutilmente marcado en el párpado. Se muestran líneas o zonas indicando longitudes y curvaturas variables (por ejemplo, para un estilo ojo de gato o muñeca). El mapeo es preciso y visible. Fondo limpio. Sin texto.";
+                case "3.2 Curvaturas y Grosores":
+                  return "Primer plano fotorrealista de una paleta con diferentes tiras de extensiones de pestañas, claramente mostrando y etiquetando distintas curvaturas (J, B, C, CC, D, L, M) y grosores (0.05, 0.07, 0.15 mm). Las diferencias de forma y grosor son distinguibles. Fondo neutro y limpio. Sin texto.";
+                case "4.1 Cuidado Post-Aplicación":
+                  return "Imagen fotorrealista de una mujer joven y sonriente, con un ojo en primer plano, cepillándose suavemente sus extensiones de pestañas recién aplicadas con un cepillo especial (spoolie). Las pestañas lucen limpias, voluminosas y bien mantenidas. La expresión es de satisfacción. Iluminación suave. Sin texto.";
+                case "4.2 Rellenos y Retirada":
+                  return "Primer plano fotorrealista de manos profesionales (con guantes) realizando un procedimiento de mantenimiento de pestañas. Se observa el uso delicado de pinzas finas y un removedor de gel para retirar o retocar una extensión de pestaña. Enfoque nítido en el proceso y las herramientas. Fondo de salón, limpio. Sin texto.";
+                default:
+                  return `Imagen realista que representa el concepto de "${sectionName}" relacionado con las extensiones de pestañas.`;
+              }
+            };
+
+            generateImageFromPrompt(getImagePrompt(section.name), `Imagen de ${section.name}`, "350x200", `Módulo ${moduleIndex + 1} - Sección ${sectionIndex + 1}`)
+                .then(url => setGeneratedSectionImageUrl(url))
+                .finally(() => setIsLoadingSectionImage(false));
+          }, [section.name]); // Regenerate image if section name changes
+
+          // New states for Q&A feature
+          const [question, setQuestion] = React.useState('');
+          const [answer, setAnswer] = React.useState('');
+          const [loadingAnswer, setLoadingAnswer] = React.useState(false);
+
+          // Function to generate a lash tip using Gemini API (remains same)
+          const generateLashTip = async (content) => {
+            setLoadingTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: true }));
+            // Prompt in Spanish
+            const prompt = `Dado el siguiente contenido sobre extensiones de pestañas, genera un consejo práctico para un principiante en una frase corta y concisa (máximo 20 palabras) que pueda integrarse directamente en el texto del módulo: "${content}"`;
+
+            try {
+              let chatHistory = [];
+              chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+              const payload = { contents: chatHistory };
+              // ##########################################################################################
+              // ########### LUGAR 5 DE 5 PARA INSERTAR TU CLAVE DE API DE GOOGLE AI STUDIO #############
+              // ##########################################################################################
+              const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- ¡DEBES REEMPLAZAR "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY" CON TU CLAVE REAL DE GOOGLE AI STUDIO!
+              // ##########################################################################################
+              if (apiKey === "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY" || apiKey === "") {
+                  setGeneratedTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: 'ERROR: Clave de API no configurada para el consejo. Por favor, inserta tu clave de API de Gemini.' }));
+                  console.error('ERROR: Clave de API no configurada para el consejo.');
+                  setLoadingTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: false }));
+                  return;
+              }
+              const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+              const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              const result = await response.json();
+
+              if (result.candidates && result.candidates.length > 0 &&
+                  result.candidates[0].content && result.candidates[0].content.parts &&
+                  result.candidates[0].content.parts.length > 0) {
+                const text = result.candidates[0].content.parts[0].text;
+                setGeneratedTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: text }));
+              } else {
+                setGeneratedTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: 'No se pudo generar el consejo. Inténtalo de nuevo.' }));
+              }
+            } catch (error) {
+              console.error("Error generating lash tip:", error);
+              setGeneratedTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: 'Error al conectar con la IA. Verifica tu clave de API y cuotas.' }));
+            } finally {
+              setLoadingTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: false }));
+            }
+          };
+
+          // New function to answer questions about the module content
+          const handleAskQuestion = async () => {
+            if (!question.trim()) {
+              setAnswer("Por favor, escribe una pregunta para obtener una respuesta.");
+              return;
+            }
+
+            setLoadingAnswer(true);
+            setAnswer(''); // Clear previous answer
+
+            // Prompt combines section content as context and user's question
+            const prompt = `Basado en el siguiente contenido sobre extensiones de pestañas y técnicas, responde a la pregunta. Si la pregunta no está directamente directamente relacionada, indica que no tienes información:
+            Contenido: "${section.content}"
+            Pregunta: "${question}"`;
+
+            try {
+              let chatHistory = [];
+              chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+              const payload = { contents: chatHistory };
+              // ##########################################################################################
+              // ########### LUGAR 6 DE 5 PARA INSERTAR TU CLAVE DE API DE GOOGLE AI STUDIO #############
+              // ##########################################################################################
+              const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- ¡DEBES REEMPLAZAR "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY" CON TU CLAVE REAL DE GOOGLE AI STUDIO!
+              // ##########################################################################################
+              if (apiKey === "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY" || apiKey === "") {
+                  setAnswer('ERROR: Clave de API no configurada para preguntas. Por favor, inserta tu clave de API de Gemini.');
+                  console.error('ERROR: Clave de API no configurada para Preguntas a la IA.');
+                  setLoadingAnswer(false);
+                  return;
+              }
+              const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+              const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              const result = await response.json();
+
+              if (result.candidates && result.candidates.length > 0 &&
+                  result.candidates[0].content && result.candidates[0].content.parts &&
+                  result.candidates[0].content.parts.length > 0) {
+                const text = result.candidates[0].content.parts[0].text;
+                setAnswer(text);
+              } else {
+                setAnswer('No se pudo obtener una respuesta. Inténtalo de nuevo.');
+              }
+            } catch (error) {
+              console.error("Error asking question to AI:", error);
+              setAnswer('Error al conectar con la IA. Verifica tu clave de API y cuotas.');
+            } finally {
+              setLoadingAnswer(false);
+            }
+          };
+
+
+          return (
+            <div className="bg-white rounded-lg p-5 shadow-sm border border-gray-200">
+              <h4 className="text-xl font-medium text-purple-600 mb-3">{section.name}</h4>
+              <p className="text-gray-700 mb-4">{section.content}</p>
+
+              {/* Display Generated Tip directly within the section */}
+              {generatedTips[`${moduleIndex}-${sectionIndex}`] && (
+                <div className="mt-4 p-3 bg-purple-100 rounded-lg border border-purple-300 text-purple-800 text-sm italic">
+                  <h5 className="font-semibold text-purple-700 mb-2">Consejo de la IA:</h5>
+                  <p>{generatedTips[`${moduleIndex}-${sectionIndex}`]}</p>
+                </div>
+              )}
+
+              {section.videoLink && (
+                <p className="text-blue-600 hover:underline mb-4">
+                  <a href={section.videoLink} target="_blank" rel="noopener noreferrer">
+                    Ver Video (Enlace de ejemplo)
+                  </a>
+                </p>
+              )}
+
+              {/* Dynamic Section Image */}
+              {isLoadingSectionImage ? (
+                <div className="mt-4 w-full h-48 flex items-center justify-center bg-gray-100 rounded-md shadow-sm">
+                  <svg className="animate-spin h-8 w-8 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              ) : (
+                <img
+                  src={generatedSectionImageUrl}
+                  alt={`[Imagen de ${section.name}]`}
+                  className="mt-4 w-full rounded-md shadow-sm object-cover h-48"
+                  onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/350x200/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA`; }}
+                />
+              )}
+
+              {/* Gemini API Integration: Generate Tip Button */}
+              <button
+                onClick={() => generateLashTip(section.content)}
+                className="mt-4 w-full bg-pink-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-pink-600 transition-colors duration-200 shadow-md flex items-center justify-center"
+                disabled={loadingTips[`${moduleIndex}-${sectionIndex}`]}
+              >
+                {loadingTips[`${moduleIndex}-${sectionIndex}`] ? (
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  'Generar Nuevo Consejo ✨'
+                )}
+              </button>
+
+              {/* New Q&A with AI Section */}
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h5 className="text-xl font-semibold text-gray-700 mb-3 text-center">Pregúntale a la IA sobre este Módulo ✨</h5>
+                <textarea
+                  className="w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-300 mb-3 resize-y"
+                  rows="2"
+                  placeholder="Ej: ¿Cuál es la diferencia entre la fase anágena y telógena?"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                ></textarea>
+                <button
+                  onClick={handleAskQuestion}
+                  className="w-full bg-purple-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-purple-600 transition-colors duration-200 shadow-md flex items-center justify-center"
+                  disabled={loadingAnswer}
+                >
+                  {loadingAnswer ? (
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    'Obtener Respuesta de la IA ✨'
+                  )}
+                </button>
+                {answer && (
+                  <div className="mt-3 p-3 bg-white rounded-lg border border-purple-200 text-purple-700 text-sm italic">
+                    <strong>Respuesta de la IA:</strong> {answer}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+
+        // Learning Modules Page Component
+        function LearningModules() {
+          const modules = [
+            {
+              title: "Módulo 1: Fundamentos de las Extensiones de Pestañas",
+              description: "Aprende sobre la anatomía de la pestaña, higiene, seguridad y los materiales esenciales.",
+              image: "https://placehold.co/300x200/93c5fd/ffffff?text=Modulo+1", // This is a placeholder, AI images are inside sections
+              sections: [
+                {
+                  name: "1.1 Anatomía y Ciclo de la Pestaña",
+                  content: "Explora la estructura de la pestaña natural y su ciclo de crecimiento. Comprender esto es crucial para una aplicación segura y duradera de las extensiones.",
+                  videoLink: "https://www.youtube.com/watch?v=ejemplo1" // Placeholder for video
+                },
+                {
+                  name: "1.2 Higiene y Seguridad",
+                  content: "Protocolos de limpieza, esterilización de herramientas, prevención de infecciones y alergias. La seguridad del cliente es primordial.",
+                  videoLink: "https://www.youtube.com/watch?v=ejemplo2"
+                },
+                {
+                  name: "1.3 Herramientas y Materiales Esenciales",
+                  content: "Descubre los diferentes tipos de pinzas, adhesivos, parches, desmaquillantes y extensiones que necesitarás.",
+                  videoLink: "https://www.youtube.com/watch?v=ejemplo3"
+                }
+              ]
+            },
+            {
+              title: "Módulo 2: Técnicas de Aplicación Clásica",
+              description: "Domina la técnica 1:1 para un look natural y elegante.",
+              image: "https://placehold.co/300x200/bfdbfe/ffffff?text=Modulo+2",
+              sections: [
+                {
+                  name: "2.1 Preparación del Cliente",
+                  content: "Cómo limpiar y preparar las pestañas naturales, aislar las pestañas inferiores y preparar el área de trabajo.",
+                  videoLink: "https://www.youtube.com/watch?v=ejemplo4"
+                },
+                {
+                  name: "2.2 Técnicas de Aislamiento",
+                  content: "La importancia del aislamiento perfecto para evitar que las extensiones se peguen entre sí.",
+                  videoLink: "https://www.youtube.com/watch?v=ejemplo5"
+                },
+                {
+                  name: "2.3 Aplicación 1:1 y Adhesión",
+                  content: "Guía paso a paso para aplicar una extensión a una pestaña natural con la cantidad adecuada de adhesivo.",
+                  videoLink: "https://www.youtube.com/watch?v=ejemplo6"
+                }
+              ]
+            },
+            {
+              title: "Módulo 3: Diseño y Estilismo de Pestañas",
+              description: "Aprende a personalizar los sets de pestañas para diferentes formas de ojos y deseos del cliente.",
+              image: "https://placehold.co/300x200/dbeafe/ffffff?text=Modulo+3",
+              sections: [
+                {
+                  name: "3.1 Mapeo de Pestañas",
+                  content: "Técnicas de mapeo para crear diferentes estilos (ojo de gato, muñeca, natural) y longitudes.",
+                  videoLink: "https://www.youtube.com/watch?v=ejemplo7"
+                },
+                {
+                  name: "3.2 Curvaturas y Grosores",
+                  content: "Selección de curvaturas (J, B, C, CC, D, L, M) y grosores para el efecto deseado.",
+                  videoLink: "https://www.youtube.com/watch?v=ejemplo8"
+                }
+              ]
+            },
+            {
+              title: "Módulo 4: Cuidado y Mantenimiento",
+              description: "Instrucciones para el cuidado posterior de las extensiones y cómo realizar rellenos y retiradas seguras.",
+              image: "https://placehold.co/300x200/eff6ff/ffffff?text=Modulo+4",
+              sections: [
+                {
+                  name: "4.1 Cuidado Post-Aplicación",
+                  content: "Consejos para el cliente sobre cómo cuidar sus extensiones de pestañas para prolongar su durabilidad.",
+                  videoLink: "https://www.youtube.com/watch?v=ejemplo9"
+                },
+                {
                   name: "4.2 Rellenos y Retirada",
                   content: "Técnicas para realizar rellenos de forma efectiva y cómo retirar las extensiones de forma segura.",
                   videoLink: "https://www.youtube.com/watch?v=ejemplo10"
+                }
+              ]
+            }
+          ];
 
+          const [expandedModule, setExpandedModule] = React.useState(null); // State to manage expanded module
+          const [generatedTips, setGeneratedTips] = React.useState({}); // State to store generated tips for each section
+          const [loadingTips, setLoadingTips] = React.useState({}); // State to manage loading status for each tip generation
+
+          const toggleModule = (index) => {
+            setExpandedModule(expandedModule === index ? null : index);
+          };
+
+
+          return (
+            <div className="py-8">
+              <h2 className="text-3xl font-bold text-purple-700 mb-8 text-center">Módulos de Aprendizaje</h2>
+              <div className="space-y-6">
+                {modules.map((module, mIndex) => (
+                  <div key={mIndex} className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center border border-purple-200 transform hover:scale-105 transition-transform duration-300">
+                    <button
+                      className="w-full text-left p-6 flex flex-col sm:flex-row items-center justify-between bg-purple-50 hover:bg-purple-100 transition-colors duration-200"
+                      onClick={() => toggleModule(mIndex)}
+                    >
+                      <img
+                        src={module.image}
+                        alt={module.title}
+                        className="w-24 h-24 object-cover rounded-full mb-4 sm:mb-0 sm:mr-6 shadow-md"
+                        onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/100x100/${Math.floor(Math.random()*16777215).toString(16)}/ffffff?text=Error`; }}
+                      />
+                      <div className="flex-1">
+                        <h3 className="text-2xl font-semibold text-purple-700 mb-2">{module.title}</h3>
+                        <p className="text-gray-600">{module.description}</p>
+                      </div>
+                      <span className="text-purple-600 text-2xl ml-4">
+                        {expandedModule === mIndex ? '▲' : '▼'}
+                      </span>
+                    </button>
+                    {expandedModule === mIndex && (
+                      <div className="p-6 bg-purple-50 border-t border-purple-200">
+                        <div className="space-y-6">
+                          {module.sections.map((section, sIndex) => (
+                            <LearningSection
+                              key={sIndex}
+                              moduleIndex={mIndex}
+                              sectionIndex={sIndex}
+                              section={section}
+                              generatedTips={generatedTips}
+                              setLoadingTips={setLoadingTips}
+                              setGeneratedTips={setGeneratedTips}
+                              loadingTips={loadingTips} // Pass loadingTips prop here
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        }
+
+        // About Page Component
+        function About() {
+          return (
+            <div className="py-8 text-center">
+              <h2 className="text-3xl font-bold text-purple-700 mb-6">Acerca de Lash Master Pro</h2>
+              <p className="text-lg leading-relaxed mb-4">
+                Lash Master Pro es una plataforma dedicada a proporcionar recursos completos para aspirantes y profesionales
+                de las extensiones de pestañas. Nuestro objetivo es ofrecer información de calidad, módulos de aprendizaje
+                interactivos y las últimas tendencias en la industria de la belleza.
+              </p>
+              <p className="text-lg leading-relaxed">
+                Creemos en el poder de la educación y la práctica para perfeccionar las habilidades.
+                ¡Únete a nuestra comunidad y eleva tu arte de las pestañas!
+              </p>
+              <img
+                src="https://placehold.co/500x300/a78bfa/ffffff?text=Equipo+Lash+Master"
+                alt="[Image of Equipo Lash Master Pro]"
+                className="mt-8 mx-auto rounded-xl shadow-md w-full max-w-lg"
+                onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/500x300/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA'; }}
+              />
+            </div>
+          );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
