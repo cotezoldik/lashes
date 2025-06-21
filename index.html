@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
-<head> 
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lash Master Pro</title>
@@ -30,14 +30,16 @@
         // Si abres este archivo directamente con "file://", las funciones de IA no trabajarán debido a las políticas de seguridad (CORS).
         // Las imágenes mostrarán spinners y luego mensajes de error si la API no puede ser alcanzada.
 
+        // --- ATENCIÓN CRÍTICA: DEBES REEMPLAZAR "YOUR_API_KEY_HERE" CON TU CLAVE REAL DE GOOGLE AI STUDIO PARA QUE LA IA FUNCIONE ---
+
         // Main App Component
         function App() {
           const [currentPage, setCurrentPage] = React.useState('home'); // State to manage current page view
 
-          // Tailwind CSS classes for consistent styling
-          const navButtonClass = "px-4 py-2 rounded-lg font-semibold transition-colors duration-200";
-          const activeNavButtonClass = "bg-purple-600 text-white shadow-lg";
-          const inactiveNavButtonClass = "bg-gray-200 text-gray-800 hover:bg-gray-300";
+          // Tailwind CSS classes for consistent styling - UPDATED FOR MODERN DESIGN
+          const navButtonClass = "px-6 py-3 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-md";
+          const activeNavButtonClass = "bg-purple-700 text-white shadow-lg";
+          const inactiveNavButtonClass = "bg-purple-100 text-purple-800 hover:bg-purple-200";
 
           // Render content based on the current page
           const renderPage = () => {
@@ -54,14 +56,14 @@
           };
 
           return (
-            <div className="min-h-screen bg-gradient-to-br from-purple-100 to-pink-100 font-inter text-gray-800 flex flex-col">
-              {/* Header Section */}
-              <header className="bg-white shadow-md p-4 flex flex-col sm:flex-row items-center justify-between sticky top-0 z-10 rounded-b-xl">
-                <h1 className="text-3xl font-extrabold text-purple-700 mb-4 sm:mb-0">
+            <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 font-inter text-gray-800 flex flex-col">
+              {/* Header Section - IMPROVED DESIGN */}
+              <header className="bg-white shadow-xl p-4 md:p-6 flex flex-col sm:flex-row items-center justify-between sticky top-0 z-10 rounded-b-3xl">
+                <h1 className="text-4xl font-extrabold text-purple-800 mb-4 sm:mb-0 md:text-5xl">
                   Lash Master Pro
                 </h1>
-                {/* Navigation */}
-                <nav className="flex flex-wrap justify-center gap-3">
+                {/* Navigation - IMPROVED BUTTON STYLE */}
+                <nav className="flex flex-wrap justify-center gap-4">
                   <button
                     onClick={() => setCurrentPage('home')}
                     className={`${navButtonClass} ${currentPage === 'home' ? activeNavButtonClass : inactiveNavButtonClass}`}
@@ -89,16 +91,16 @@
                 </nav>
               </header>
 
-              {/* Main Content Area */}
-              <main className="flex-grow p-6 sm:p-8">
-                <div className="max-w-4xl mx-auto bg-white p-6 sm:p-8 rounded-2xl shadow-xl">
+              {/* Main Content Area - IMPROVED SPACING AND SHADOW */}
+              <main className="flex-grow p-6 sm:p-8 md:p-10">
+                <div className="max-w-5xl mx-auto bg-white p-6 sm:p-8 md:p-10 rounded-3xl shadow-2xl border border-purple-200">
                   {renderPage()}
                 </div>
               </main>
 
-              {/* Footer Section */}
-              <footer className="bg-purple-800 text-white p-4 text-center mt-8 rounded-t-xl">
-                <p>&copy; 2024 Lash Master Pro. Todos los derechos reservados.</p>
+              {/* Footer Section - IMPROVED DESIGN */}
+              <footer className="bg-purple-900 text-white p-4 md:p-6 text-center mt-12 rounded-t-3xl shadow-inner">
+                <p className="text-lg">&copy; 2024 Lash Master Pro. Todos los derechos reservados.</p>
               </footer>
             </div>
           );
@@ -106,12 +108,15 @@
 
         // --- Helper function for Image Generation ---
         async function generateImageFromPrompt(promptText, altText, fallbackSize = "400x250", contextName = "General") {
+            // --- VERIFICA AQUÍ LA CLAVE DE API ---
+            const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- ¡DEBES REEMPLAZAR ESTO CON TU CLAVE REAL DE GOOGLE AI STUDIO!
+            if (apiKey === "YOUR_API_KEY_HERE" || apiKey === "") {
+                console.error(`ERROR: La clave de API de Gemini no está configurada para la generación de imágenes en ${contextName}.`);
+                return `https://placehold.co/${fallbackSize}/FF0000/FFFFFF?text=ERROR+CLAVE+API`;
+            }
+
             const prompt = `Fotorrealista, de alta calidad, fondo simple, sin texto. ${promptText}`;
             const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1 } };
-            // --- INSERTA TU CLAVE DE API DE GEMINI AQUÍ ---
-            // ADVERTENCIA DE SEGURIDAD: NO COMPARTAS ESTA CLAVE PÚBLICAMENTE.
-            // Para producción, se recomienda un proxy de servidor para ocultar la clave.
-            const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- REEMPLAZA ESTO CON TU CLAVE REAL DE GOOGLE AI STUDIO
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
 
             try {
@@ -166,10 +171,10 @@
                 Tu guía completa para dominar el arte de las extensiones de pestañas. Explora nuestros módulos de aprendizaje,
                 descubre los diferentes tipos de pestañas y mejora tus habilidades.
               </p>
-              {/* Centered Dynamic Image */}
+              {/* Centered Dynamic Image with improved styling */}
               <div className="flex justify-center mb-6">
                 {isLoadingImage ? (
-                  <div className="w-full max-w-lg h-64 flex items-center justify-center bg-gray-200 rounded-xl shadow-md">
+                  <div className="w-full max-w-lg h-64 flex items-center justify-center bg-gray-200 rounded-2xl shadow-lg">
                     <svg className="animate-spin h-10 w-10 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -179,7 +184,7 @@
                   <img
                     src={generatedImageUrl}
                     alt="[Image of Esteticista Aplicando Pestañas]"
-                    className="rounded-xl shadow-md w-full max-w-lg h-64 object-cover mx-auto"
+                    className="rounded-2xl shadow-xl w-full max-w-lg h-64 object-cover mx-auto transform hover:scale-102 transition-transform duration-300"
                     onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/400x250/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA'; }}
                   />
                 )}
@@ -298,6 +303,12 @@
           const [clientAnalysis, setClientAnalysis] = React.useState(''); // New state for AI client analysis
           const [loadingAnalysis, setLoadingAnalysis] = React.useState(false); // New state for loading analysis
 
+          // New states for Marketing Content Generator
+          const [marketingLashType, setMarketingLashType] = React.useState('');
+          const [marketingKeywords, setMarketingKeywords] = React.useState('');
+          const [generatedMarketingText, setGeneratedMarketingText] = React.useState('');
+          const [loadingMarketingText, setLoadingMarketingText] = React.useState(false);
+
 
           const handleSuggestLashCombination = async () => {
             if (!eyeShape || !desiredLook || !occasion) { // Added occasion to validation
@@ -318,6 +329,12 @@
               // --- INSERTA TU CLAVE DE API DE GEMINI AQUÍ ---
               // ADVERTENCIA DE SEGURIDAD: NO COMPARTAS ESTA CLAVE PÚBLICAMENTE.
               const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- REEMPLAZA ESTO CON TU CLAVE REAL DE GOOGLE AI STUDIO
+              if (apiKey === "YOUR_API_KEY_HERE" || apiKey === "") {
+                  setLashSuggestion('ERROR: Clave de API no configurada. Por favor, inserta tu clave de API de Gemini.');
+                  console.error('ERROR: Clave de API no configurada para Sugerencia de Combinación.');
+                  setLoadingSuggestion(false);
+                  return;
+              }
               const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
               const response = await fetch(apiUrl, {
@@ -353,7 +370,8 @@
             setLoadingAnalysis(true);
             setClientAnalysis(''); // Clear previous analysis
 
-            const prompt = `Analiza la siguiente descripción de cliente para extensiones de pestañas y sugiere los tipos de pestañas más adecuados (Clásicas, Volumen, Híbridas, Mega Volumen, Levantamiento de Pestañas), explicando brevemente por qué. Ten en cuenta el tono, las preferencias mencionadas y cualquier detalle relevante: "${clientDescription}"`;
+            // PROMPT MEJORADO PARA MAYOR FLEXIBILIDAD
+            const prompt = `Basado en la siguiente descripción del cliente para extensiones de pestañas, proporciona una sugerencia útil sobre los estilos de pestañas más adecuados (Clásicas, Volumen, Híbridas, Mega Volumen, Levantamiento de Pestañas). Si la información es limitada, haz inferencias razonables o sugiere opciones versátiles, explicando brevemente tu razonamiento y considerando el look deseado y el estilo de vida del cliente. Descripción: "${clientDescription}"`;
 
             try {
               let chatHistory = [];
@@ -362,6 +380,12 @@
               // --- INSERTA TU CLAVE DE API DE GEMINI AQUÍ ---
               // ADVERTENCIA DE SEGURIDAD: NO COMPARTAS ESTA CLAVE PÚBLICAMENTE.
               const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- REEMPLAZA ESTO CON TU CLAVE REAL DE GOOGLE AI STUDIO
+              if (apiKey === "YOUR_API_KEY_HERE" || apiKey === "") {
+                  setClientAnalysis('ERROR: Clave de API no configurada. Por favor, inserta tu clave de API de Gemini.');
+                  console.error('ERROR: Clave de API no configurada para Análisis de Cliente.');
+                  setLoadingAnalysis(false);
+                  return;
+              }
               const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
               const response = await fetch(apiUrl, {
@@ -384,6 +408,56 @@
               setClientAnalysis('Error al conectar con la IA. Verifica tu clave de API y cuotas.');
             } finally {
               setLoadingAnalysis(false);
+            }
+          };
+
+          // New function to handle marketing text generation
+          const handleGenerateMarketingText = async () => {
+            if (!marketingLashType || !marketingKeywords.trim()) {
+              setGeneratedMarketingText("Por favor, selecciona un tipo de pestaña y describe el tono/palabras clave.");
+              return;
+            }
+
+            setLoadingMarketingText(true);
+            setGeneratedMarketingText('');
+
+            const prompt = `Genera un texto de marketing o una descripción corta para redes sociales (máximo 50 palabras) para el tipo de pestañas "${marketingLashType}". El tono o las palabras clave son: "${marketingKeywords}". Incluye hashtags relevantes.`;
+
+            try {
+              let chatHistory = [];
+              chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+              const payload = { contents: chatHistory };
+              // --- INSERTA TU CLAVE DE API DE GEMINI AQUÍ ---
+              // ADVERTENCIA DE SEGURIDAD: NO COMPARTAS ESTA CLAVE PÚBLICAMENTE.
+              const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- REEMPLAZA ESTO CON TU CLAVE REAL DE GOOGLE AI STUDIO
+              if (apiKey === "YOUR_API_KEY_HERE" || apiKey === "") {
+                  setGeneratedMarketingText('ERROR: Clave de API no configurada. Por favor, inserta tu clave de API de Gemini.');
+                  console.error('ERROR: Clave de API no configurada para Generador de Marketing.');
+                  setLoadingMarketingText(false);
+                  return;
+              }
+              const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+              const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
+              const result = response.json();
+
+              if (result.candidates && result.candidates.length > 0 &&
+                  result.candidates[0].content && result.candidates[0].content.parts &&
+                  result.candidates[0].content.parts.length > 0) {
+                const text = result.candidates[0].content.parts[0].text;
+                setGeneratedMarketingText(text);
+              } else {
+                setGeneratedMarketingText('No se pudo generar el texto de marketing. Inténtalo de nuevo.');
+              }
+            } catch (error) {
+              console.error("Error generating marketing text:", error);
+              setGeneratedMarketingText('Error al conectar con la IA. Verifica tu clave de API y cuotas.');
+            } finally {
+              setLoadingMarketingText(false);
             }
           };
 
@@ -495,7 +569,7 @@
                 <textarea
                   className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 mb-4 resize-y"
                   rows="4"
-                  placeholder="Ej: Mi cliente tiene ojos almendrados y busca un look natural para uso diario. Es muy activa y le gusta el maquillaje mínimo."
+                  placeholder="Ej: Describe a tu cliente, incluso si la información es general (ej. 'Quiere algo discreto para trabajar' o 'Necesita un look dramático para una fiesta'). La IA intentará sugerir el estilo ideal."
                   value={clientDescription}
                   onChange={(e) => setClientDescription(e.target.value)}
                 ></textarea>
@@ -519,6 +593,70 @@
                   </div>
                 )}
               </div>
+
+              {/* NEW: Marketing Content Generator Section */}
+              <div className="bg-purple-50 rounded-xl shadow-lg p-6 mb-8 border border-purple-200">
+                <h3 className="text-2xl font-semibold text-purple-700 mb-4 text-center">
+                  Generador de Contenido de Marketing ✨
+                </h3>
+                <p className="text-gray-700 mb-4 text-center">
+                  Crea textos atractivos para redes sociales o promociones.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label htmlFor="marketingLashType" className="block text-gray-700 text-sm font-bold mb-2">
+                      Tipo de Pestaña:
+                    </label>
+                    <select
+                      id="marketingLashType"
+                      value={marketingLashType}
+                      onChange={(e) => setMarketingLashType(e.target.value)}
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-purple-500 transition-colors duration-200"
+                    >
+                      <option value="">Selecciona un tipo</option>
+                      <option value="Pestañas Clásicas">Pestañas Clásicas</option>
+                      <option value="Pestañas de Volumen (2D-6D)">Pestañas de Volumen</option>
+                      <option value="Pestañas Híbridas">Pestañas Híbridas</option>
+                      <option value="Pestañas Mega Volumen (7D+)">Pestañas Mega Volumen</option>
+                      <option value="Levantamiento de Pestañas (Lash Lift)">Levantamiento de Pestañas</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="marketingKeywords" className="block text-gray-700 text-sm font-bold mb-2">
+                      Tono / Palabras Clave:
+                    </label>
+                    <input
+                      type="text"
+                      id="marketingKeywords"
+                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-purple-500 transition-colors duration-200"
+                      placeholder="Ej: elegante, natural, impactante, promocional"
+                      value={marketingKeywords}
+                      onChange={(e) => setMarketingKeywords(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={handleGenerateMarketingText}
+                  className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-md flex items-center justify-center"
+                  disabled={loadingMarketingText}
+                >
+                  {loadingMarketingText ? (
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    'Generar Texto de Marketing ✨'
+                  )}
+                </button>
+                {generatedMarketingText && (
+                  <div className="mt-4 p-4 bg-white rounded-lg border border-blue-300 text-blue-800 text-sm italic">
+                    <strong>Texto de Marketing Generado:</strong> {generatedMarketingText}
+                  </div>
+                )}
+              </div>
+              {/* END Marketing Content Generator Section */}
+
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {lashTypes.map((type, index) => (
@@ -609,6 +747,12 @@
               // --- INSERTA TU CLAVE DE API DE GEMINI AQUÍ ---
               // ADVERTENCIA DE SEGURIDAD: NO COMPARTAS ESTA CLAVE PÚBLICAMENTE.
               const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- REEMPLAZA ESTO CON TU CLAVE REAL DE GOOGLE AI STUDIO
+              if (apiKey === "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY" || apiKey === "") {
+                  setGeneratedTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: 'ERROR: Clave de API no configurada para el consejo. Por favor, inserta tu clave de API de Gemini.' }));
+                  console.error('ERROR: Clave de API no configurada para el consejo.');
+                  setLoadingTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: false }));
+                  return;
+              }
               const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
               const response = await fetch(apiUrl, {
@@ -645,7 +789,7 @@
             setAnswer(''); // Clear previous answer
 
             // Prompt combines section content as context and user's question
-            const prompt = `Basado en el siguiente contenido sobre extensiones de pestañas y técnicas, responde a la pregunta. Si la pregunta no está directamente relacionada, indica que no tienes información:
+            const prompt = `Basado en el siguiente contenido sobre extensiones de pestañas y técnicas, responde a la pregunta. Si la pregunta no está directamente directamente relacionada, indica que no tienes información:
             Contenido: "${section.content}"
             Pregunta: "${question}"`;
 
@@ -656,6 +800,12 @@
               // --- INSERTA TU CLAVE DE API DE GEMINI AQUÍ ---
               // ADVERTENCIA DE SEGURIDAD: NO COMPARTAS ESTA CLAVE PÚBLICAMENTE.
               const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- REEMPLAZA ESTO CON TU CLAVE REAL DE GOOGLE AI STUDIO
+              if (apiKey === "YOUR_API_KEY_HERE" || apiKey === "") {
+                  setAnswer('ERROR: Clave de API no configurada para preguntas. Por favor, inserta tu clave de API de Gemini.');
+                  console.error('ERROR: Clave de API no configurada para Preguntas a la IA.');
+                  setLoadingAnswer(false);
+                  return;
+              }
               const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
               const response = await fetch(apiUrl, {
@@ -868,7 +1018,7 @@
               <h2 className="text-3xl font-bold text-purple-700 mb-8 text-center">Módulos de Aprendizaje</h2>
               <div className="space-y-6">
                 {modules.map((module, mIndex) => (
-                  <div key={mIndex} className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center border border-purple-200 overflow-hidden">
+                  <div key={mIndex} className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center border border-purple-200 transform hover:scale-105 transition-transform duration-300">
                     <button
                       className="w-full text-left p-6 flex flex-col sm:flex-row items-center justify-between bg-purple-50 hover:bg-purple-100 transition-colors duration-200"
                       onClick={() => toggleModule(mIndex)}
