@@ -23,16 +23,12 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // ADVERTENCIA CRÍTICA:
-        // Las llamadas a la API de Gemini (para sugerencias de pestañas, análisis de cliente y preguntas a la IA)
-        // MUY PROBABLEMENTE NO FUNCIONARÁN al ejecutar este archivo directamente desde tu máquina local
-        // (es decir, abriendo el archivo con "file://"). Esto se debe a las políticas de seguridad del navegador (CORS).
-        // Los navegadores impiden que el código local haga solicitudes a servidores externos.
-        // La aplicación se cargará, pero estas funciones de IA fallarán y mostrarán errores en la consola.
-        //
-        // Las imágenes AHORA SON ESTÁTICAS (placehold.co) y NO USAN LA IA.
-        // Si las imágenes estáticas no cargan (ves "IMAGEN NO CARGADA"), el problema es de tu navegador, red o firewall,
-        // NO del código de la aplicación. Por favor, limpia la caché del navegador o prueba otra red.
+        // ADVERTENCIA IMPORTANTE:
+        // Las llamadas a la API de Gemini (para sugerencias de pestañas, análisis de cliente, preguntas a la IA)
+        // Y LA GENERACIÓN DINÁMICA DE IMÁGENES
+        // SOLO FUNCIONARÁN CORRECTAMENTE cuando la aplicación se ejecute desde un SERVIDOR WEB (como Netlify o un entorno de desarrollo local).
+        // Si abres este archivo directamente con "file://", las funciones de IA no trabajarán debido a las políticas de seguridad (CORS).
+        // Las imágenes mostrarán spinners y luego mensajes de error si la API no puede ser alcanzada.
 
         // Main App Component
         function App() {
@@ -108,11 +104,60 @@
           );
         }
 
+        // --- Helper function for Image Generation ---
+        async function generateImageFromPrompt(promptText, altText, fallbackSize = "400x250", contextName = "General") {
+            const prompt = `Fotorrealista, de alta calidad, fondo simple, sin texto. ${promptText}`;
+            const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1 } };
+            // --- INSERTA TU CLAVE DE API DE GEMINI AQUÍ ---
+            // ADVERTENCIA DE SEGURIDAD: NO COMPARTAS ESTA CLAVE PÚBLICAMENTE.
+            // Para producción, se recomienda un proxy de servidor para ocultar la clave.
+            const apiKey = ""; // <--- REEMPLAZA ESTO CON TU CLAVE REAL DE GOOGLE AI STUDIO
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.text();
+                    throw new Error(`API Error ${response.status} for ${contextName}: ${response.statusText} - ${errorDetails}`);
+                }
+
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const errorText = await response.text();
+                    throw new Error(`Unexpected content type for ${contextName}: ${contentType || 'none'} - ${errorText}`);
+                }
+
+                const result = await response.json();
+
+                if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                    return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                } else {
+                    console.error(`No predictions or data found for ${contextName}. Result:`, result);
+                    return `https://placehold.co/${fallbackSize}/FF0000/FFFFFF?text=IMAGEN+NO+GENERADA`;
+                }
+            } catch (error) {
+                console.error(`Error fetching image for ${contextName}:`, error);
+                return `https://placehold.co/${fallbackSize}/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA`;
+            }
+        }
+
+
         // Home Page Component
         function Home() {
-          // Static image URL - NO AI GENERATION FOR IMAGES TO ENSURE STABILITY
-          // Changed color to a distinct green for better visibility and confirmation
-          const homeImageUrl = "https://placehold.co/600x400/28a745/FFFFFF?text=Esteticista+Aplicando+Pestañas";
+          const [generatedImageUrl, setGeneratedImageUrl] = React.useState('');
+          const [isLoadingImage, setIsLoadingImage] = React.useState(true);
+
+          React.useEffect(() => {
+            const prompt = "Esteticista profesional sonriente y alegre, con guantes, aplicando meticulosamente extensiones de pestañas a una clienta joven también sonriente y satisfecha. Ambas miran a la cámara con expresiones de felicidad. La escena es un salón de belleza moderno y limpio, con iluminación suave y cálida. Enfoque nítido en las pestañas y las manos del profesional. Colores vibrantes y realistas.";
+            generateImageFromPrompt(prompt, "Bienvenida al Mundo de las Pestañas", "600x400", "Home Page")
+                .then(url => setGeneratedImageUrl(url))
+                .finally(() => setIsLoadingImage(false));
+          }, []);
 
           return (
             <div className="text-center py-8">
@@ -121,15 +166,23 @@
                 Tu guía completa para dominar el arte de las extensiones de pestañas. Explora nuestros módulos de aprendizaje,
                 descubre los diferentes tipos de pestañas y mejora tus habilidades.
               </p>
-              {/* Centered Static Image */}
+              {/* Centered Dynamic Image */}
               <div className="flex justify-center mb-6">
-                <img
-                  src={homeImageUrl}
-                  alt="[Image of Esteticista Aplicando Pestañas]"
-                  className="rounded-xl shadow-md w-full max-w-lg h-64 object-cover mx-auto"
-                  // Fallback if placehold.co itself fails (very rare) - distinct red
-                  onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/400x250/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA'; }}
-                />
+                {isLoadingImage ? (
+                  <div className="w-full max-w-lg h-64 flex items-center justify-center bg-gray-200 rounded-xl shadow-md">
+                    <svg className="animate-spin h-10 w-10 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                ) : (
+                  <img
+                    src={generatedImageUrl}
+                    alt="[Image of Esteticista Aplicando Pestañas]"
+                    className="rounded-xl shadow-md w-full max-w-lg h-64 object-cover mx-auto"
+                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://placehold.co/400x250/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA'; }}
+                  />
+                )}
               </div>
               <p className="text-md mt-6 text-gray-600">
                 ¡Comienza tu viaje hoy mismo! Navega por las secciones de arriba para empezar.
@@ -140,23 +193,49 @@
 
         // Lash Types Page Component
         function LashTypes() {
-          // Static image URLs for each lash type - NO AI GENERATION FOR IMAGES TO ENSURE STABILITY
-          // Changed color to a distinct green for better visibility and confirmation
-          const classicImage = "https://placehold.co/300x200/28a745/FFFFFF?text=Pestañas+Clásicas";
-          const volumeImage = "https://placehold.co/300x200/28a745/FFFFFF?text=Pestañas+Volumen";
-          const hybridImage = "https://placehold.co/300x200/28a745/FFFFFF?text=Pestañas+Híbridas";
-          const megaVolumeImage = "https://placehold.co/300x200/28a745/FFFFFF?text=Pestañas+Mega+Volumen";
-          const lashLiftImage = "https://placehold.co/300x200/28a745/FFFFFF?text=Levantamiento+Pestañas";
+          // States for each lash type image and its loading status
+          const [classicImage, setClassicImage] = React.useState('');
+          const [loadingClassic, setLoadingClassic] = React.useState(true);
+          const [volumeImage, setVolumeImage] = React.useState('');
+          const [loadingVolume, setLoadingVolume] = React.useState(true);
+          const [hybridImage, setHybridImage] = React.useState('');
+          const [loadingHybrid, setLoadingHybrid] = React.useState(true);
+          const [megaVolumeImage, setMegaVolumeImage] = React.useState('');
+          const [loadingMegaVolume, setLoadingMegaVolume] = React.useState(true);
+          const [lashLiftImage, setLashLiftImage] = React.useState('');
+          const [loadingLashLift, setLoadingLashLift] = React.useState(true);
 
-          // isLoading states are always false now as images are static
-          const loadingState = false; // Consolidated loading state as it's always false for static images
+          React.useEffect(() => {
+            const loadImages = async () => {
+              // Generate images with a delay to avoid rate limiting issues
+              setClassicImage(await generateImageFromPrompt("Primer plano extremo fotorrealista de un ojo con extensiones de pestañas clásicas perfectamente aplicadas. Cada extensión individual está meticulosamente adherida a una pestaña natural, creando un efecto de alargamiento natural. Fondo liso y difuminado. Colores realistas.", "Pestañas Clásicas", "300x200", "Pestañas Clásicas"));
+              setLoadingClassic(false);
+              await new Promise(resolve => setTimeout(resolve, 500)); // Short delay
+
+              setVolumeImage(await generateImageFromPrompt("Primer plano extremo fotorrealista de un ojo con extensiones de pestañas de volumen (abanicos 4D-6D) perfectamente aplicadas. Los abanicos densos y mullidos se ven claramente, creando un efecto de alto volumen y dramatismo. Fondo liso y difuminado. Colores realistas.", "Pestañas Volumen", "300x200", "Pestañas Volumen"));
+              setLoadingVolume(false);
+              await new Promise(resolve => setTimeout(resolve, 500));
+
+              setHybridImage(await generateImageFromPrompt("Primer plano extremo fotorrealista de un ojo con extensiones de pestañas híbridas, mostrando una mezcla equilibrada de extensiones individuales (clásicas) y abanicos de volumen. La textura y la densidad son claramente visibles. Fondo liso y difuminado. Colores realistas.", "Pestañas Híbridas", "300x200", "Pestañas Híbridas"));
+              setLoadingHybrid(false);
+              await new Promise(resolve => setTimeout(resolve, 500));
+
+              setMegaVolumeImage(await generateImageFromPrompt("Primer plano extremo fotorrealista de un ojo con extensiones de pestañas de mega volumen (abanicos 10D-15D) perfectamente aplicadas. El efecto es de máxima densidad y un look glamuroso y oscuro. Fondo liso y difuminado. Colores realistas.", "Pestañas Mega Volumen", "300x200", "Pestañas Mega Volumen"));
+              setLoadingMegaVolume(false);
+              await new Promise(resolve => setTimeout(resolve, 500));
+
+              setLashLiftImage(await generateImageFromPrompt("Primer plano extremo fotorrealista de un ojo con pestañas naturales después de un levantamiento (lash lift). Las pestañas están perfectamente curvadas hacia arriba desde la raíz, dando un aspecto de ojo abierto y alargado natural. Sin extensiones. Fondo liso y difuminado. Colores realistas.", "Levantamiento Pestañas", "300x200", "Levantamiento de Pestañas"));
+              setLoadingLashLift(false);
+            };
+            loadImages();
+          }, []);
 
           const lashTypes = [
             {
               name: "Pestañas Clásicas",
               description: "Las extensiones clásicas consisten en aplicar una extensión individual a una pestaña natural. Proporcionan un aspecto más natural, añadiendo longitud y un poco de volumen.",
               image: classicImage,
-              isLoading: loadingState,
+              isLoading: loadingClassic,
               details: [
                 "Relación 1:1 (una extensión por pestaña natural)",
                 "Ideal para un look natural o para quienes tienen muchas pestañas naturales",
@@ -167,7 +246,7 @@
               name: "Pestañas de Volumen (2D-6D)",
               description: "Las extensiones de volumen, también conocidas como pestañas rusas de volumen, implican la creación de 'abanicos' de múltiples extensiones ligeras (2-6D) que se aplican a una sola pestaña natural. Ofrecen un aspecto más denso y dramático.",
               image: volumeImage,
-              isLoading: loadingState,
+              isLoading: loadingVolume,
               details: [
                 "Abanicos prefabricados o hechos a mano (2D-6D)",
                 "Crean un aspecto más lleno y dramático",
@@ -178,9 +257,9 @@
               name: "Pestañas Híbridas",
               description: "Las pestañas híbridas son una combinación de extensiones clásicas y de volumen. Ofrecen una textura más completa que las clásicas, pero menos dramática que el volumen completo, logrando un look versátil.",
               image: hybridImage,
-              isLoading: loadingState,
+              isLoading: loadingHybrid,
               details: [
-                "Mezcla de técnicas clásicas y de volumen",
+                "Mélange de techniques classiques et de volume",
                 "Aspecto texturizado y completo",
                 "Duración: 3-4 semanas con relleno"
               ]
@@ -189,7 +268,7 @@
               name: "Pestañas Mega Volumen (7D+)",
               description: "El mega volumen lleva las pestañas de volumen al siguiente nivel, utilizando abanicos aún más grandes y ligeros (7D o más) para crear un efecto extremadamente denso y glamuroso.",
               image: megaVolumeImage,
-              isLoading: loadingState,
+              isLoading: loadingMegaVolume,
               details: [
                 "Abanicos muy grandes (7D o más)",
                 "Para un look ultra-dramático y denso",
@@ -200,7 +279,7 @@
               name: "Levantamiento de Pestañas (Lash Lift)",
               description: "No es una extensión, sino un tratamiento que riza y levanta las pestañas naturales desde la raíz, haciéndolas parecer más largas y voluminosas. A menudo se combina con un tinte de pestañas.",
               image: lashLiftImage,
-              isLoading: loadingState,
+              isLoading: loadingLashLift,
               details: [
                 "Tratamiento semipermanente para pestañas naturales",
                 "Crea un efecto de rizado y levantamiento",
@@ -236,7 +315,9 @@
               let chatHistory = [];
               chatHistory.push({ role: "user", parts: [{ text: prompt }] });
               const payload = { contents: chatHistory };
-              const apiKey = ""; // Canvas will provide in runtime if run in supported environments.
+              // --- INSERTA TU CLAVE DE API DE GEMINI AQUÍ ---
+              // ADVERTENCIA DE SEGURIDAD: NO COMPARTAS ESTA CLAVE PÚBLICAMENTE.
+              const apiKey = ""; // <--- REEMPLAZA ESTO CON TU CLAVE REAL DE GOOGLE AI STUDIO
               const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
               const response = await fetch(apiUrl, {
@@ -256,7 +337,7 @@
               }
             } catch (error) {
               console.error("Error generating lash combination:", error);
-              setLashSuggestion('Error al conectar con la IA. (CORS puede ser la causa en entorno local)');
+              setLashSuggestion('Error al conectar con la IA. Verifica tu clave de API y cuotas.');
             } finally {
               setLoadingSuggestion(false);
             }
@@ -278,7 +359,9 @@
               let chatHistory = [];
               chatHistory.push({ role: "user", parts: [{ text: prompt }] });
               const payload = { contents: chatHistory };
-              const apiKey = ""; // Canvas will provide in runtime.
+              // --- INSERTA TU CLAVE DE API DE GEMINI AQUÍ ---
+              // ADVERTENCIA DE SEGURIDAD: NO COMPARTAS ESTA CLAVE PÚBLICAMENTE.
+              const apiKey = ""; // <--- REEMPLAZA ESTO CON TU CLAVE REAL DE GOOGLE AI STUDIO
               const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
               const response = await fetch(apiUrl, {
@@ -286,7 +369,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
               });
-              const result = await response.json();
+              const result = response.json();
 
               if (result.candidates && result.candidates.length > 0 &&
                   result.candidates[0].content && result.candidates[0].content.parts &&
@@ -298,7 +381,7 @@
               }
             } catch (error) {
               console.error("Error analyzing client description:", error);
-              setClientAnalysis('Error al conectar con la IA. (CORS puede ser la causa en entorno local)');
+              setClientAnalysis('Error al conectar con la IA. Verifica tu clave de API y cuotas.');
             } finally {
               setLoadingAnalysis(false);
             }
@@ -440,14 +523,21 @@
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {lashTypes.map((type, index) => (
                   <div key={index} className="bg-white rounded-xl shadow-lg p-6 flex flex-col items-center border border-purple-200 transform hover:scale-105 transition-transform duration-300">
-                    {/* Display static image */}
-                    <img
-                      src={type.image}
-                      alt={`[Imagen de ${type.name}]`}
-                      className="w-full h-48 object-cover rounded-md mb-4 shadow-md"
-                      // Fallback for static images will be less frequent but still good to have
-                      onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/300x200/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA`; }}
-                    />
+                    {type.isLoading ? (
+                      <div className="w-full h-48 flex items-center justify-center bg-gray-100 rounded-md mb-4 shadow-sm">
+                        <svg className="animate-spin h-8 w-8 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0  018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </div>
+                    ) : (
+                      <img
+                        src={type.image}
+                        alt={`[Imagen de ${type.name}]`}
+                        className="w-full h-48 object-cover rounded-md mb-4 shadow-md"
+                        onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/300x200/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA`; }}
+                      />
+                    )}
                     <h3 className="text-2xl font-semibold text-purple-600 mb-3">{type.name}</h3>
                     <p className="text-gray-700 text-center mb-4 leading-relaxed">{type.description}</p>
                     <ul className="text-gray-600 text-left w-full list-disc list-inside">
@@ -462,39 +552,44 @@
           );
         }
 
-        // LearningSection Component (Uses static images)
+        // LearningSection Component (Now uses dynamic AI images)
         function LearningSection({ moduleIndex, sectionIndex, section, generatedTips, setLoadingTips, setGeneratedTips, loadingTips }) {
-          // Static image URL based on section name
-          // Changed color to a distinct green for better visibility and confirmation
-          const getStaticImageUrl = (sectionName) => {
-            switch (sectionName) {
-              case "1.1 Anatomía y Ciclo de la Pestaña":
-                return "https://placehold.co/350x200/28a745/FFFFFF?text=Anatomía+del+Cil";
-              case "1.2 Higiene y Seguridad":
-                return "https://placehold.co/350x200/28a745/FFFFFF?text=Higiene+y+Seguridad";
-              case "1.3 Herramientas y Materiales Esenciales":
-                return "https://placehold.co/350x200/28a745/FFFFFF?text=Herramientas+y+Materiales";
-              case "2.1 Preparación del Cliente":
-                return "https://placehold.co/350x200/28a745/FFFFFF?text=Preparación+Cliente";
-              case "2.2 Técnicas de Aislamiento":
-                return "https://placehold.co/350x200/28a745/FFFFFF?text=Técnicas+Aislamiento";
-              case "2.3 Aplicación 1:1 y Adhesión":
-                return "https://placehold.co/350x200/28a745/FFFFFF?text=Aplicación+1:1";
-              case "3.1 Mapeo de Pestañas":
-                return "https://placehold.co/350x200/28a745/FFFFFF?text=Mapeo+Pestañas";
-              case "3.2 Curvaturas y Grosores":
-                return "https://placehold.co/350x200/28a745/FFFFFF?text=Curvaturas+y+Grosores";
-              case "4.1 Cuidado Post-Aplicación":
-                return "https://placehold.co/350x200/28a745/FFFFFF?text=Cuidado+Post-Aplicación";
-              case "4.2 Rellenos y Retirada":
-                return "https://placehold.co/350x200/28a745/FFFFFF?text=Rellenos+y+Retirada";
-              default:
-                return "https://placehold.co/350x200/28a745/FFFFFF?text=Imagen+Módulo";
-            }
-          };
+          const [generatedSectionImageUrl, setGeneratedSectionImageUrl] = React.useState('');
+          const [isLoadingSectionImage, setIsLoadingSectionImage] = React.useState(true);
 
-          const generatedSectionImageUrl = getStaticImageUrl(section.name);
-          const isLoadingSectionImage = false; // No loading needed as it's static
+          React.useEffect(() => {
+            // Define specific prompts for each section's image
+            const getImagePrompt = (sectionName) => {
+              switch (sectionName) {
+                case "1.1 Anatomía y Ciclo de la Pestaña":
+                  return "Ilustración fotorrealista y muy detallada de un ojo humano, con un enfoque claro en las pestañas naturales. Muestra de forma didáctica el folículo piloso y las fases del ciclo de crecimiento de la pestaña (anágena, catágena, telógena). Fondo blanco o muy limpio. Estilo científico pero accesible. Sin texto.";
+                case "1.2 Higiene y Seguridad":
+                  return "Imagen fotorrealista de primer plano de manos con guantes estériles de un técnico de pestañas, sujetando herramientas de extensión de pestañas desinfectadas y organizadas en una bandeja metálica limpia. El entorno es un salón de belleza inmaculado, con luz brillante. Enfoque en la limpieza y el profesionalismo. Sin texto.";
+                case "1.3 Herramientas y Materiales Esenciales":
+                  return "Disposición fotorrealista y artística de todas las herramientas y materiales esenciales para extensiones de pestañas. Incluye diferentes tipos de pinzas (recta, curva, de aislamiento), una botella de adhesivo para pestañas, parches de hidrogel, un cepillo de microfibra, un soplador de aire, una caja de extensiones de pestañas de varios grosores y curvaturas, y una cinta médica. Todo dispuesto ordenadamente sobre una superficie de mármol blanco o madera clara. Iluminación suave y uniforme. Sin texto.";
+                case "2.1 Preparación del Cliente":
+                  return "Primer plano fotorrealista y delicado de las manos de un profesional, usando un limpiador espumoso y un cepillo suave para limpiar las pestañas de una clienta. La clienta está recostada con los ojos cerrados, y se ven parches de hidrogel protegiendo las pestañas inferiores. Ambiente de salón, iluminación suave. Sin texto.";
+                case "2.2 Técnicas de Aislamiento":
+                  return "Primer plano extremo y fotorrealista de la técnica de aislamiento de pestañas. Una pestaña natural individual es perfectamente aislada usando dos pinzas finas y puntiagudas. Las otras pestañas naturales están claramente apartadas. Fondo desenfocado. Enfoque nítido en el punto de aislamiento. Sin texto.";
+                case "2.3 Aplicación 1:1 y Adhesión":
+                  return "Primer plano extremo y fotorrealista de una extensión de pestaña siendo aplicada con precisión a una pestaña natural individual, mostrando el punto exacto de adhesión y unas pinzas de extensión de pestañas. Fondo difuminado. Sin texto.";
+                case "3.1 Mapeo de Pestañas":
+                  return "Ilustración fotorrealista y clara de un ojo con un 'mapa de pestañas' sutilmente marcado en el párpado. Se muestran líneas o zonas indicando longitudes y curvaturas variables (por ejemplo, para un estilo ojo de gato o muñeca). El mapeo es preciso y visible. Fondo limpio. Sin texto.";
+                case "3.2 Curvaturas y Grosores":
+                  return "Primer plano fotorrealista de una paleta con diferentes tiras de extensiones de pestañas, claramente mostrando y etiquetando distintas curvaturas (J, B, C, CC, D, L, M) y grosores (0.05, 0.07, 0.15 mm). Las diferencias de forma y grosor son distinguibles. Fondo neutro y limpio. Sin texto.";
+                case "4.1 Cuidado Post-Aplicación":
+                  return "Imagen fotorrealista de una mujer joven y sonriente, con un ojo en primer plano, cepillándose suavemente sus extensiones de pestañas recién aplicadas con un cepillo especial (spoolie). Las pestañas lucen limpias, voluminosas y bien mantenidas. La expresión es de satisfacción. Iluminación suave. Sin texto.";
+                case "4.2 Rellenos y Retirada":
+                  return "Primer plano fotorrealista de manos profesionales (con guantes) realizando un procedimiento de mantenimiento de pestañas. Se observa el uso delicado de pinzas finas y un removedor de gel para retirar o retocar una extensión de pestaña. Enfoque nítido en el proceso y las herramientas. Fondo de salón, limpio. Sin texto.";
+                default:
+                  return `Imagen realista que representa el concepto de "${sectionName}" relacionado con las extensiones de pestañas.`;
+              }
+            };
+
+            generateImageFromPrompt(getImagePrompt(section.name), `Imagen de ${section.name}`, "350x200", `Módulo ${moduleIndex + 1} - Sección ${sectionIndex + 1}`)
+                .then(url => setGeneratedSectionImageUrl(url))
+                .finally(() => setIsLoadingSectionImage(false));
+          }, [section.name]); // Regenerate image if section name changes
 
           // New states for Q&A feature
           const [question, setQuestion] = React.useState('');
@@ -511,7 +606,9 @@
               let chatHistory = [];
               chatHistory.push({ role: "user", parts: [{ text: prompt }] });
               const payload = { contents: chatHistory };
-              const apiKey = ""; // Canvas will provide in runtime.
+              // --- INSERTA TU CLAVE DE API DE GEMINI AQUÍ ---
+              // ADVERTENCIA DE SEGURIDAD: NO COMPARTAS ESTA CLAVE PÚBLICAMENTE.
+              const apiKey = ""; // <--- REEMPLAZA ESTO CON TU CLAVE REAL DE GOOGLE AI STUDIO
               const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
               const response = await fetch(apiUrl, {
@@ -519,7 +616,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
               });
-              const result = await response.json();
+              const result = response.json();
 
               if (result.candidates && result.candidates.length > 0 &&
                   result.candidates[0].content && result.candidates[0].content.parts &&
@@ -531,7 +628,7 @@
               }
             } catch (error) {
               console.error("Error generating lash tip:", error);
-              setGeneratedTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: 'Error al conectar con la IA. (CORS puede ser la causa en entorno local)' }));
+              setGeneratedTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: 'Error al conectar con la IA. Verifica tu clave de API y cuotas.' }));
             } finally {
               setLoadingTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: false }));
             }
@@ -556,7 +653,9 @@
               let chatHistory = [];
               chatHistory.push({ role: "user", parts: [{ text: prompt }] });
               const payload = { contents: chatHistory };
-              const apiKey = ""; // Canvas will provide in runtime.
+              // --- INSERTA TU CLAVE DE API DE GEMINI AQUÍ ---
+              // ADVERTENCIA DE SEGURIDAD: NO COMPARTAS ESTA CLAVE PÚBLICAMENTE.
+              const apiKey = ""; // <--- REEMPLAZA ESTO CON TU CLAVE REAL DE GOOGLE AI STUDIO
               const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
               const response = await fetch(apiUrl, {
@@ -564,7 +663,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
               });
-              const result = await response.json();
+              const result = response.json();
 
               if (result.candidates && result.candidates.length > 0 &&
                   result.candidates[0].content && result.candidates[0].content.parts &&
@@ -576,7 +675,7 @@
               }
             } catch (error) {
               console.error("Error asking question to AI:", error);
-              setAnswer('Error al conectar con la IA. (CORS puede ser la causa en entorno local)');
+              setAnswer('Error al conectar con la IA. Verifica tu clave de API y cuotas.');
             } finally {
               setLoadingAnswer(false);
             }
@@ -604,13 +703,22 @@
                 </p>
               )}
 
-              {/* Static Section Image */}
-              <img
-                src={generatedSectionImageUrl}
-                alt={`[Imagen de ${section.name}]`}
-                className="mt-4 w-full rounded-md shadow-sm object-cover h-48"
-                onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/350x200/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA`; }}
-              />
+              {/* Dynamic Section Image */}
+              {isLoadingSectionImage ? (
+                <div className="mt-4 w-full h-48 flex items-center justify-center bg-gray-100 rounded-md shadow-sm">
+                  <svg className="animate-spin h-8 w-8 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </div>
+              ) : (
+                <img
+                  src={generatedSectionImageUrl}
+                  alt={`[Imagen de ${section.name}]`}
+                  className="mt-4 w-full rounded-md shadow-sm object-cover h-48"
+                  onError={(e) => { e.target.onerror = null; e.target.src = `https://placehold.co/350x200/FF0000/FFFFFF?text=IMAGEN+NO+CARGADA`; }}
+                />
+              )}
 
               {/* Gemini API Integration: Generate Tip Button */}
               <button
@@ -669,7 +777,7 @@
             {
               title: "Módulo 1: Fundamentos de las Extensiones de Pestañas",
               description: "Aprende sobre la anatomía de la pestaña, higiene, seguridad y los materiales esenciales.",
-              image: "https://placehold.co/300x200/93c5fd/ffffff?text=Modulo+1",
+              image: "https://placehold.co/300x200/93c5fd/ffffff?text=Modulo+1", // This is a placeholder, AI images are inside sections
               sections: [
                 {
                   name: "1.1 Anatomía y Ciclo de la Pestaña",
