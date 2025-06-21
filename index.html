@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -40,15 +41,18 @@ import ReactDOM from 'react-dom/client'; // Import for React 18 createRoot
 import { GoogleGenAI } from "https://esm.sh/@google/genai";
 
 // Initialize the GoogleGenAI client
-// IMPORTANT: process.env.API_KEY is assumed to be set in the execution environment.
+// IMPORTANT: API Key is now hardcoded.
 let ai;
+const apiKey = "AIzaSyDfSH-I3vv0v6uXmTfMnt1YtwTQQJmboQo"; // Your API Key
+
 try {
-    ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    if (!apiKey) {
+        throw new Error("API_KEY is not defined. Please ensure it is correctly set.");
+    }
+    ai = new GoogleGenAI({ apiKey: apiKey });
 } catch (e) {
-    console.error("Failed to initialize GoogleGenAI. API_KEY might be missing or invalid in the environment.", e);
+    console.error("Failed to initialize GoogleGenAI. API_KEY might be missing or invalid.", e);
     // AI features will not work if 'ai' is not initialized.
-    // The application should ideally handle this state gracefully,
-    // but per guidelines, we assume API_KEY is pre-configured and valid.
 }
 
 // Main App Component
@@ -282,7 +286,7 @@ function LashTypes() {
       console.error(`Error ${errorContext} using SDK:`, error);
       let userErrorMessage = `Error al conectar con la IA. Inténtalo de nuevo.`;
       if (error.message && error.message.toLowerCase().includes("api key not valid")) {
-          userErrorMessage = "Error: La clave de API no es válida o no está configurada correctamente en el entorno.";
+          userErrorMessage = "Error: La clave de API no es válida o no está configurada correctamente.";
       } else if (error.message && error.message.toLowerCase().includes("quota")) {
           userErrorMessage = "Error: Se ha alcanzado la cuota de la API.";
       }
@@ -569,7 +573,12 @@ function LearningModules() {
       }
     } catch (error) {
       console.error(`Error ${errorContext} using SDK:`, error);
-      const userErrorMessage = `Error al conectar con la IA. Verifique su conexión o la configuración de la API.`;
+      let userErrorMessage = `Error al conectar con la IA. Verifique su conexión o la configuración de la API.`;
+      if (error.message && error.message.toLowerCase().includes("api key not valid")) {
+          userErrorMessage = "Error: La clave de API no es válida o no está configurada correctamente.";
+      } else if (error.message && error.message.toLowerCase().includes("quota")) {
+          userErrorMessage = "Error: Se ha alcanzado la cuota de la API.";
+      }
       if (typeof setResult === 'function') {
         setResult(userErrorMessage);
       }
