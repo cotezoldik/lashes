@@ -342,7 +342,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
               });
-              const result = await response.json();
+              const result = response.json();
 
               if (result.candidates && result.candidates.length > 0 &&
                   result.candidates[0].content && result.candidates[0].content.parts &&
@@ -747,7 +747,7 @@
               // --- INSERTA TU CLAVE DE API DE GEMINI AQUÍ ---
               // ADVERTENCIA DE SEGURIDAD: NO COMPARTAS ESTA CLAVE PÚBLICAMENTE.
               const apiKey = "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY"; // <--- REEMPLAZA ESTO CON TU CLAVE REAL DE GOOGLE AI STUDIO
-              if (apiKey === "AIzaSyB5kNzXbHNZAWgQVO8AMDxTwB35p-1hVxY" || apiKey === "") {
+              if (apiKey === "YOUR_API_KEY_HERE" || apiKey === "") {
                   setGeneratedTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: 'ERROR: Clave de API no configurada para el consejo. Por favor, inserta tu clave de API de Gemini.' }));
                   console.error('ERROR: Clave de API no configurada para el consejo.');
                   setLoadingTips(prev => ({ ...prev, [`${moduleIndex}-${sectionIndex}`]: false }));
